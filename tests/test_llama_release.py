@@ -52,6 +52,54 @@ def test_unknown_machine_is_told_how_to_bring_a_build(monkeypatch):
         release.pick("auto")
 
 
+def test_nvidia_driver_is_false_when_the_library_has_no_device(monkeypatch):
+    """A leftover libcuda.so.1 dlopens fine on an AMD box but cuInit says 100."""
+
+    class Driver:
+        def cuInit(self, flags):
+            return 100  # CUDA_ERROR_NO_DEVICE
+
+        def cuDeviceGetCount(self, pointer):
+            raise AssertionError("no device count to read after cuInit failed")
+
+    monkeypatch.setattr(release.ctypes, "CDLL", lambda name: Driver())
+    assert release.nvidia_driver() is False
+
+
+def test_nvidia_driver_is_true_when_a_device_is_present(monkeypatch):
+    class Driver:
+        def cuInit(self, flags):
+            assert flags == 0
+            return 0
+
+        def cuDeviceGetCount(self, pointer):
+            pointer._obj.value = 1
+            return 0
+
+    monkeypatch.setattr(release.ctypes, "CDLL", lambda name: Driver())
+    assert release.nvidia_driver() is True
+
+
+def test_nvidia_driver_is_false_without_the_library(monkeypatch):
+    def missing(name):
+        raise OSError("libcuda.so.1: cannot open shared object file")
+
+    monkeypatch.setattr(release.ctypes, "CDLL", missing)
+    assert release.nvidia_driver() is False
+
+
+def test_nvidia_driver_is_false_for_a_library_that_is_not_cuda(monkeypatch):
+    monkeypatch.setattr(release.ctypes, "CDLL", lambda name: object())
+    assert release.nvidia_driver() is False
+
+
+@pytest.mark.parametrize(("nvidia", "expected"), [(False, "vulkan"), (True, "cuda")])
+def test_auto_prefers_cuda_only_with_a_usable_nvidia_gpu(monkeypatch, nvidia, expected):
+    monkeypatch.setattr(release, "supported", lambda: ["cuda", "vulkan", "cpu"])
+    monkeypatch.setattr(release, "nvidia_driver", lambda: nvidia)
+    assert release.pick("auto") == expected
+
+
 def test_every_package_is_pinned_by_a_sha256():
     for (system, machine, family), archives in release.PACKAGES.items():
         assert family in release.PREFERENCE, (system, machine, family)
@@ -177,3 +225,15 @@ def test_install_and_locate(tmp_path, monkeypatch):
     monkeypatch.setenv(release.RUNTIME_DIR_ENV, str(tmp_path / "missing"))
     with pytest.raises(ValueError, match="not found"):
         release.locate()
+
+
+def test_locate_orders_by_pick_not_by_preference(monkeypatch, tmp_path):
+    """The ordering is the point, not the filesystem: with both runtimes installed, an
+    installed CUDA runtime must not shadow the Vulkan one `pick("auto")` recommends on a
+    machine with no NVIDIA GPU (PREFERENCE alone would return cuda)."""
+    monkeypatch.setattr(release, "supported", lambda: ["cuda", "vulkan", "cpu"])
+    monkeypatch.setattr(release, "install_dir", lambda name: tmp_path / name)
+    monkeypatch.setattr(release, "pick", lambda accelerator="auto": "vulkan")
+    monkeypatch.setattr(release, "find_library", lambda directory: directory / "libllama.so")
+    monkeypatch.delenv(release.RUNTIME_DIR_ENV, raising=False)
+    assert release.locate() == tmp_path / "vulkan"
