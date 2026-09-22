@@ -6,6 +6,7 @@ import io
 import re
 import tarfile
 import threading
+import types
 import zipfile
 
 import pytest
@@ -177,3 +178,27 @@ def test_install_and_locate(tmp_path, monkeypatch):
     monkeypatch.setenv(release.RUNTIME_DIR_ENV, str(tmp_path / "missing"))
     with pytest.raises(ValueError, match="not found"):
         release.locate()
+
+
+def test_rosetta_is_reported_so_the_cpu_package_is_not_a_surprise(monkeypatch):
+    """An Intel interpreter on Apple Silicon can only load the Intel build: `host()` sees x64 and
+    the GPU stays out of reach, so `download` has something to warn about."""
+    monkeypatch.setattr(release.sys, "platform", "darwin")
+    monkeypatch.setattr(release, "host", lambda: ("darwin", "x64"))
+    monkeypatch.setattr(
+        release.subprocess, "run", lambda *a, **k: types.SimpleNamespace(stdout="1\n")
+    )
+    assert release.translated() is True
+
+
+def test_a_real_intel_mac_is_not_mistaken_for_rosetta(monkeypatch):
+    monkeypatch.setattr(release.sys, "platform", "darwin")
+    monkeypatch.setattr(release, "host", lambda: ("darwin", "x64"))
+    monkeypatch.setattr(release.subprocess, "run", lambda *a, **k: types.SimpleNamespace(stdout=""))
+    assert release.translated() is False
+
+
+def test_translation_is_a_macos_question_only(monkeypatch):
+    monkeypatch.setattr(release.sys, "platform", "linux")
+    monkeypatch.setattr(release, "host", lambda: ("linux", "x64"))
+    assert release.translated() is False
