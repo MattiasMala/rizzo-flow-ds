@@ -104,8 +104,18 @@ def main():
                 print(download_model(args.destination, args.size))
                 return
             if args.only != "weights":
-                from .llama_release import install
+                from .llama_release import install, translated
 
+                if translated():
+                    print(
+                        "rizzo: this Python is an x86_64 build running under Rosetta on an Apple "
+                        "Silicon Mac, so the only package it can load is the Intel CPU one: no "
+                        "Metal, and decisions take seconds instead of milliseconds. For the GPU, "
+                        "recreate the environment with a native interpreter — "
+                        "uv python install 3.12 && uv sync --locked --python 3.12 — and run "
+                        "rizzo download --only runtime again.",
+                        file=sys.stderr,
+                    )
                 print(install(args.runtime, progress))
             if args.only != "runtime":
                 print(download_gguf(args.size, args.quant, args.destination, progress))
@@ -151,21 +161,28 @@ def main():
         )
         calibration = Calibration.from_file(args.calibration) if args.calibration else None
         engine = Engine(backend, ctx=args.ctx, calibration=calibration)
-        if args.command == "decide":
-            write_json(engine.decide(request), args.output)
-        elif args.command == "evaluate":
-            from .evaluation import evaluate
+        try:
+            if args.command == "decide":
+                write_json(engine.decide(request), args.output)
+            elif args.command == "evaluate":
+                from .evaluation import evaluate
 
-            write_json(
-                evaluate(engine, read_jsonl(args.input), args.repeats, args.compare_modes),
-                args.output,
-            )
-        elif args.command == "serve":
-            import uvicorn
+                write_json(
+                    evaluate(engine, read_jsonl(args.input), args.repeats, args.compare_modes),
+                    args.output,
+                )
+            elif args.command == "serve":
+                import uvicorn
 
-            from .api import create_app
+                from .api import create_app
 
-            uvicorn.run(create_app(engine), host=args.host, port=args.port)
+                uvicorn.run(create_app(engine), host=args.host, port=args.port)
+        finally:
+            # Metal aborts at exit when the context outlives the interpreter; other backends
+            # simply get their memory back a moment earlier.
+            release = getattr(backend, "close", None)
+            if release is not None:
+                release()
     except (ValueError, OSError, ImportError) as error:
         print(f"rizzo: {error}", file=sys.stderr)
         raise SystemExit(1) from error

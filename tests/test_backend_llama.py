@@ -51,6 +51,9 @@ class FakeSession:
     def synchronize(self):
         pass
 
+    def close(self):
+        self.calls.append(("close",))
+
     def free_bytes(self):
         return None
 
@@ -209,3 +212,11 @@ def test_loader_rejects_options_of_the_other_backend(tmp_path):
         loader.load_backend("llama", model=tmp_path / "missing.gguf")
     with pytest.raises(ValueError, match="one of"):
         loader.load_backend("onnx")
+
+
+def test_close_releases_the_session_before_the_interpreter_goes_away():
+    """The Metal device is torn down by a static destructor at exit and aborts if a buffer is
+    still registered, so the context has to be freed while Python is still running."""
+    engine = backend()
+    engine.close()
+    assert ("close",) in engine.session.calls
