@@ -78,6 +78,13 @@ def main():
         )
         p.add_argument("--threads", type=int, help="CPU threads (llama backend)")
         p.add_argument("--batch-size", type=int, default=4)
+        p.add_argument(
+            "--kv-type",
+            choices=("f16", "q8_0", "q4_0"),
+            default=None,
+            help="KV cache precision (llama backend): q8_0 halves it, q4_0 quarters it; "
+                 "default is llama.cpp's own (f16). Use it when a long --ctx does not fit",
+        )
         # --max-tokens is the former name, kept as an alias.
         p.add_argument(
             "--ctx",
@@ -148,6 +155,7 @@ def main():
             ctx=args.ctx,
             batch_size=args.batch_size,
             threads=args.threads,
+            kv_type=args.kv_type,
         )
         calibration = Calibration.from_file(args.calibration) if args.calibration else None
         engine = Engine(backend, ctx=args.ctx, calibration=calibration)

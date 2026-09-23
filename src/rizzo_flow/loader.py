@@ -22,6 +22,7 @@ def load_backend(
     ctx=8192,
     batch_size=4,
     threads=None,
+    kv_type=None,
 ):
     if backend not in BACKENDS:
         raise ValueError(f"Backend must be one of: {', '.join(BACKENDS)}")
@@ -55,6 +56,7 @@ def load_backend(
         ctx=ctx,
         batch_size=batch_size,
         threads=threads,
+        kv_type=kv_type,
     )
 
 
