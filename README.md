@@ -115,9 +115,9 @@ sha256. `rizzo devices` shows what the runtime sees and what `--device auto` wil
 | Your machine | Build picked (`--runtime auto`) | Status |
 | --- | --- | --- |
 | Windows or Linux, NVIDIA GPU | `cuda` — CUDA 13 libraries included; needs a recent driver, no toolkit | **tested on Windows 10 + RTX 5060 Ti**: every current number in this README. Linux not tried |
-| Windows or Linux, AMD or Intel GPU | `vulkan` — uses the GPU driver you already have | **the Vulkan build was tested on the same RTX 5060 Ti** and gives the same answers as CUDA. Not tried on AMD or Intel hardware: [reports welcome](https://github.com/Rizzo-AI-Academy/rizzo-flow/issues) |
-| Mac, Apple Silicon | `metal` | not tried yet |
-| No GPU | `vulkan` falls back to the CPU; or `--runtime cpu` | not tried: we have no CPU number |
+| Windows or Linux, AMD or Intel GPU | `vulkan` — uses the GPU driver you already have | Community reports cover an AMD Radeon 780M and Intel Iris Xe; see [#11](https://github.com/Rizzo-AI-Academy/rizzo-flow/issues/11) and [#7](https://github.com/Rizzo-AI-Academy/rizzo-flow/issues/7). The Intel run used Q4_K_M; these reports have not been independently reproduced by the maintainers. |
+| Mac, Apple Silicon | `metal` | A community report covers an M3 Pro; see [#5](https://github.com/Rizzo-AI-Academy/rizzo-flow/issues/5). The run has not been independently reproduced by the maintainers; an M4 device-selection issue is tracked in [#9](https://github.com/Rizzo-AI-Academy/rizzo-flow/issues/9). |
+| No GPU | `vulkan` falls back to the CPU; or `--runtime cpu` | CPU mode was reported on an Intel laptop with an iGPU ([#7](https://github.com/Rizzo-AI-Academy/rizzo-flow/issues/7)); a GPU-free host has not been tested. |
 
 Other builds on request: `uv run rizzo download --only runtime --runtime rocm` (AMD, ROCm/HIP),
 `--runtime sycl` (Intel oneAPI), `--runtime cpu`. Several builds can live side by side and
@@ -574,8 +574,8 @@ Architecture notes and the current state of the work: [CLAUDE.md](CLAUDE.md) (It
   [pull request #14](https://github.com/Rizzo-AI-Academy/rizzo-flow/pull/14)). The fix on `main` is
   a wider one, written separately; both pointed at the right line.
 
-Want to be next? The most useful contribution right now is a run on hardware we do not have:
-an AMD or Intel GPU, a Mac, Linux, or a machine without a GPU —
+Want to be next? The most useful next reports are from Linux, other AMD or Intel GPUs,
+different Apple Silicon models, ROCm/SYCL builds, or a dedicated CPU-only machine. Please
 [open an issue](https://github.com/Rizzo-AI-Academy/rizzo-flow/issues) with the output of
 `rizzo devices` and your timings.
 
