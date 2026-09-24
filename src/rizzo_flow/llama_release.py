@@ -155,13 +155,24 @@ def library_name() -> str:
 
 
 def nvidia_driver() -> bool:
-    """An NVIDIA driver is installed: its user-mode library loads. No CUDA toolkit needed."""
+    """An NVIDIA GPU this driver can actually drive.
+
+    Loading the user-mode library is not enough: a leftover `libcuda.so.1` on a machine with
+    no NVIDIA card dlopens fine and only fails when a device is asked for, which used to send
+    `auto` to the CUDA build on an AMD box. No CUDA toolkit is needed, only a working driver.
+    """
     name = "nvcuda.dll" if sys.platform == "win32" else "libcuda.so.1"
     try:
-        ctypes.CDLL(name)
-    except OSError:
-        return False
-    return True
+        driver = ctypes.CDLL(name)
+        initialized = driver.cuInit(0)  # 100 = CUDA_ERROR_NO_DEVICE
+        if initialized != 0:
+            return False
+        count = ctypes.c_int(0)
+        if driver.cuDeviceGetCount(ctypes.byref(count)) != 0:
+            return False
+    except (OSError, AttributeError):
+        return False  # no library, or not a CUDA driver library at all
+    return count.value > 0
 
 
 def supported(system: str | None = None, machine: str | None = None) -> list[str]:
@@ -171,8 +182,9 @@ def supported(system: str | None = None, machine: str | None = None) -> list[str
 
 
 def pick(accelerator: str = "auto") -> str:
-    """Accelerator family to install here. `auto`: Metal, else CUDA with an NVIDIA driver,
-    else Vulkan (any GPU vendor; it falls back to the CPU when there is no GPU), else CPU."""
+    """Accelerator family to install here. `auto`: Metal, else CUDA when an NVIDIA GPU is
+    usable, else Vulkan (any GPU vendor; it falls back to the CPU when there is no GPU), else
+    CPU."""
     if accelerator not in ACCELERATORS:
         raise ValueError(f"Runtime must be one of: {', '.join(ACCELERATORS)}")
     available = supported()
@@ -217,7 +229,16 @@ def locate(family: str | None = None) -> Path:
         if library is None:
             raise ValueError(f"{RUNTIME_DIR_ENV}={override}: {library_name()} not found there")
         return library.parent
-    for accelerator in sorted(supported(), key=lambda name: name != family):
+    order = supported()
+    if family is not None:
+        order = sorted(order, key=lambda name: name != family)
+    elif order:
+        # Prefer what `pick("auto")` recommends: the first entry of PREFERENCE may be a
+        # family this machine cannot drive (a CUDA runtime on an AMD box enumerates no
+        # device) and would silently run on the CPU.
+        best = pick("auto")
+        order = sorted(order, key=lambda name: name != best)
+    for accelerator in order:
         library = find_library(install_dir(accelerator))
         if library is not None:
             return library.parent
