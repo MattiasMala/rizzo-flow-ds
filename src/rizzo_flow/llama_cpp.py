@@ -31,6 +31,10 @@ LOG_ENV = "RIZZO_LLAMA_LOG"  # set to 1 to see llama.cpp's own info/debug lines
 GPU_LAYERS = 999  # more than any model has: offload everything
 # enum ggml_backend_dev_type
 DEVICE_KINDS = {0: "cpu", 1: "gpu", 2: "igpu", 3: "accel", 4: "meta"}
+# ggml_type for the KV cache: F16 is the llama.cpp default, q8_0 halves it and
+# q4_0 quarters it. On a small GPU the F16 cache is what makes a long context
+# fail to allocate, while the decision quality barely moves.
+KV_TYPES = {"f16": 1, "q8_0": 8, "q4_0": 2}
 SPLIT_MODE_NONE = 0
 LOG_LEVEL_WARN, LOG_LEVEL_ERROR = 3, 4
 
@@ -347,6 +351,7 @@ class Session:
         n_ubatch: int = 512,
         n_seq_max: int = 5,
         threads: int | None = None,
+        kv_type: str | None = None,
     ) -> "Session":
         library = Library.open(directory)
         chosen = choose_device(library.devices(), device)
@@ -376,6 +381,8 @@ class Session:
         # Logits are read at one position per sequence; the default reserves n_batch rows of
         # the whole vocabulary.
         params.n_outputs_max = n_seq_max
+        if kv_type:  # None: keep llama.cpp's own default (F16)
+            params.type_k = params.type_v = KV_TYPES[kv_type]
         params.offload_kqv = chosen is not None
         params.no_perf = True
         if threads:

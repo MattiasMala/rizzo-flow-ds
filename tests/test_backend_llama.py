@@ -220,6 +220,8 @@ def test_loader_rejects_options_of_the_other_backend(tmp_path):
         loader.load_backend("llama", device="mlx")
     with pytest.raises(ValueError, match="llama backend"):
         loader.load_backend("mlx", device="vulkan")
+    with pytest.raises(ValueError, match="--kv-type"):
+        loader.load_backend("mlx", kv_type="q8_0")
     with pytest.raises(ValueError, match=".gguf"):
         loader.load_backend("llama", model=tmp_path)
     with pytest.raises(ValueError, match="rizzo download"):

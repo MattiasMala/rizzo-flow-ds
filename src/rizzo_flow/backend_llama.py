@@ -67,6 +67,7 @@ class LlamaBackend:
         prefill_chunk=512,
         threads=None,
         runtime_dir=None,
+        kv_type=None,
     ):
         path = Path(path).resolve()
         if not path.is_file():
@@ -89,6 +90,7 @@ class LlamaBackend:
             n_ubatch=prefill_chunk,
             n_seq_max=batch_size + 1,
             threads=threads,
+            kv_type=kv_type,
         )
         try:
             architecture = session.meta("general.architecture")
@@ -120,6 +122,10 @@ class LlamaBackend:
             "llama_cpp_commit": llama_release.COMMIT,
             "prompt_version": PROMPT_VERSION,
         }
+        # A quantized KV cache moves the logits, so it is part of the identity. F16 is the
+        # runtime's default and adds no key: fingerprints recorded before the option still hold.
+        if kv_type not in (None, "f16"):
+            identity["kv_cache"] = kv_type
         metadata = {
             **identity,
             "fingerprint": hashlib.sha256(canonical(identity).encode()).hexdigest(),

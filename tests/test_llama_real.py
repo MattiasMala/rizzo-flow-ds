@@ -16,17 +16,21 @@ from rizzo_flow.config import GGUF, MODELS
 pytestmark = pytest.mark.integration
 
 
+def smallest():
+    """The smallest Q8_0 GGUF on disk, or None."""
+    files = [spec.path for spec in GGUF.values() if spec.quant == "q8_0" and spec.path.is_file()]
+    return min(files, key=lambda path: path.stat().st_size) if files else None
+
+
 @pytest.fixture(scope="module")
 def backend():
     if os.environ.get("RIZZO_REAL") != "1":
         pytest.skip("set RIZZO_REAL=1 to load real weights")
-    files = [spec for spec in GGUF.values() if spec.quant == "q8_0" and spec.path.is_file()]
-    if not files or not llama_release.installed():
+    if smallest() is None or not llama_release.installed():
         pytest.skip("run `rizzo download` first")
     from rizzo_flow.backend_llama import LlamaBackend
 
-    smallest = min(files, key=lambda spec: spec.path.stat().st_size)
-    loaded = LlamaBackend.load(smallest.path, ctx=4096)
+    loaded = LlamaBackend.load(smallest(), ctx=4096)
     yield loaded
     loaded.session.close()
 
@@ -90,3 +94,24 @@ def test_shared_prefix_agrees_with_direct(backend):
             other, key=other.get
         )
         assert max(abs(answer["probabilities"][o] - other[o]) for o in other) < 0.05
+
+
+@pytest.mark.parametrize("kv_type", ["q8_0", "q4_0"])
+def test_quantized_kv_cache_loads_and_is_fingerprinted(backend, kv_type):
+    """A quantized V cache needs flash attention in llama.cpp: the context must still build,
+    decide the ticket like the F16 cache does, and carry its own fingerprint."""
+    from rizzo_flow.backend_llama import LlamaBackend
+    from rizzo_flow.engine import Engine
+
+    quantized = LlamaBackend.load(smallest(), ctx=4096, kv_type=kv_type)
+    try:
+        assert quantized.metadata["kv_cache"] == kv_type
+        assert quantized.metadata["fingerprint"] != backend.metadata["fingerprint"]
+        request = json.loads(Path("examples/ticket.json").read_text(encoding="utf-8"))
+        ours = Engine(quantized, ctx=4096).decide(request)["answers"]
+        reference = Engine(backend, ctx=4096).decide(request)["answers"]
+        for key, answer in ours.items():
+            probabilities, other = answer["probabilities"], reference[key]["probabilities"]
+            assert max(probabilities, key=probabilities.get) == max(other, key=other.get)
+    finally:
+        quantized.session.close()
