@@ -557,6 +557,22 @@ Architecture notes and the current state of the work: [CLAUDE.md](CLAUDE.md) (It
   and honest measurements. It convinced us to make llama.cpp the default runtime for every
   GPU vendor. The implementation on `main` is a separate one (prebuilt binaries instead of a
   build step); their fix to `.gitignore` for local result files is merged as their commit.
+- [**MrJev**](https://github.com/MrJev) — found that `NaN` in a request body returned a 500 where
+  every other malformed input returns a clean 422
+  ([issue #3](https://github.com/Rizzo-AI-Academy/rizzo-flow/issues/3)), and independently
+  verified the published results: all 36 `SHA256SUMS`, every `dataset_sha256`, and every metric
+  recomputed from its own rows.
+- [**mandu5**](https://github.com/mandu5) — ran a Jev conformance suite
+  ([jevcompat](https://github.com/mandu5/jevcompat)) against `/v1/systemone` and reported the three
+  differences precisely ([issue #12](https://github.com/Rizzo-AI-Academy/rizzo-flow/issues/12)):
+  unknown top-level fields and the unknown-model error shape are fixed, the 26-option cap is now
+  documented as the deliberate limit it is.
+- [**chasseurmic**](https://github.com/chasseurmic) and
+  [**dajiaohuang**](https://github.com/dajiaohuang) — reported and patched `--device metal` failing
+  on Apple silicon, where the backend registers itself as `MTL`
+  ([issue #9](https://github.com/Rizzo-AI-Academy/rizzo-flow/issues/9),
+  [pull request #14](https://github.com/Rizzo-AI-Academy/rizzo-flow/pull/14)). The fix on `main` is
+  a wider one, written separately; both pointed at the right line.
 
 Want to be next? The most useful contribution right now is a run on hardware we do not have:
 an AMD or Intel GPU, a Mac, Linux, or a machine without a GPU —
