@@ -13,6 +13,7 @@ import http.client
 import os
 import platform
 import shutil
+import subprocess
 import sys
 import tarfile
 import urllib.request
@@ -148,6 +149,22 @@ def host() -> tuple[str, str]:
     system = "linux" if sys.platform.startswith("linux") else sys.platform
     machine = platform.machine().lower()
     return system, {"amd64": "x64", "x86_64": "x64", "aarch64": "arm64"}.get(machine, machine)
+
+
+def translated() -> bool:
+    """This x86_64 interpreter runs under Rosetta on Apple Silicon. The package has to match the
+    interpreter, not the hardware — an Intel Python can only load the Intel build — so the machine
+    has a GPU that `host()` cannot reach. `platform.machine()` reports x86_64 inside Rosetta;
+    `hw.optional.arm64` is answered by the kernel and stays truthful."""
+    if sys.platform != "darwin" or host()[1] != "x64":
+        return False
+    try:
+        answer = subprocess.run(
+            ["sysctl", "-n", "hw.optional.arm64"], capture_output=True, text=True, check=False
+        )
+    except OSError:
+        return False
+    return answer.stdout.strip() == "1"
 
 
 def library_name() -> str:

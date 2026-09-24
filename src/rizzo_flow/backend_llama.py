@@ -158,6 +158,12 @@ class LlamaBackend:
         if group:
             yield group
 
+    def close(self):
+        """Release the context and the weights. On Metal the device is torn down by a static
+        destructor at exit, and it aborts if any buffer is still registered, so the session has
+        to be closed while the interpreter is alive rather than left to process teardown."""
+        self.session.close()
+
     def _track_memory(self):
         free = self.session.free_bytes()
         if free is not None:
