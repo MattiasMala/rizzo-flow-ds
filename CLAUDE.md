@@ -30,7 +30,7 @@ uv sync --extra test --locked                     # llama.cpp non richiede extra
 .venv/bin/rizzo download                          # runtime llama.cpp per questa macchina (runtimes/) + GGUF Q8_0 (~4.4 GB, models/)
 .venv/bin/rizzo download --only runtime --runtime vulkan   # un'altra build; --backend mlx scarica i pesi originali (~8 GB)
 .venv/bin/rizzo devices                           # device visti da llama.cpp e scelta di auto; su Windows gli eseguibili sono in .venv/Scripts/
-.venv/bin/pytest -q                               # 65 test (+4 saltati), ~3 s, nessun peso richiesto
+.venv/bin/pytest -q                               # 78 test (+6 saltati), ~4 s, nessun peso richiesto
 RIZZO_REAL=1 .venv/bin/pytest -q -m integration   # 6 test con runtime e GGUF reali (il più piccolo Q8_0 presente)
 .venv/bin/pytest tests/test_compat.py::test_systemone_wire_shape   # test singolo
 .venv/bin/ruff check src tests scripts && .venv/bin/ruff format --check src tests scripts
@@ -201,9 +201,13 @@ alla PR: binari precompilati ufficiali con sha256 invece della compilazione, GGU
 XHToken invece di una conversione di terzi, device enumerati da ggml invece di sondare `/sys`,
 cache unificata (prefisso condiviso, non `ctx × (batch+1)`), Windows/macOS/Linux.
 
-Provato **solo** su Windows 10 + RTX 5060 Ti, build CUDA 13.4 e build Vulkan sulla stessa scheda.
-**Mai eseguiti: macOS/Metal (il Mac dell'utente!), Linux, AMD, Intel, ROCm, SYCL, sola CPU** —
-regola dell'utente: su questo PC niente prove su CPU. Prima cosa da fare sul Mac:
+Provato **da noi solo** su Windows 10 + RTX 5060 Ti, build CUDA 13.4 e build Vulkan sulla stessa
+scheda. Segnalazioni della community (24 settembre 2026, non riprodotte da noi): M3 Pro/Metal
+(issue #5, con le due correzioni della PR #4: contesto liberato prima dell'uscita, avviso Rosetta),
+Radeon 780M/Vulkan su Linux (#11), Iris Xe/Vulkan e sola CPU su Windows (#7), RX 7900 XTX/Vulkan
+su Linux (PR #6: la sonda CUDA ora chiede un device). Mai eseguiti: ROCm, SYCL, macchina senza
+GPU; il Mac dell'utente (M4 Pro) non ancora — regola dell'utente: su questo PC niente prove su
+CPU. `--kv-type q8_0|q4_0` (PR #10) misurato solo su CUDA. Prima cosa da fare sul Mac:
 `uv sync --locked && rizzo download && rizzo devices && RIZZO_REAL=1 pytest -m integration`.
 
 Numeri (4B, prompt v3; report in `results/semif-compare/*-llama-*`, `analysis.json` accanto;
@@ -355,8 +359,10 @@ CUDA su Linux e l'extra `mlx` dopo queste modifiche **non sono stati provati** (
   propri di breve vita, fuori da `Engine`, resta esposto.
 
 ### Da fare
-- **Provare llama.cpp sul Mac (Metal)** e, appena possibile, su Linux e su una GPU AMD o Intel
-  vera; rispondere a BiG86 sulla PR #1 (la sua RX 7900 XTX sarebbe la prima prova AMD).
+- **Provare llama.cpp sul Mac dell'utente (M4 Pro, Metal)**; ROCm, SYCL e `--kv-type` su Vulkan
+  restano da provare.
+- PR aperte non unite: #8 (tipi strutturati; saltata dall'utente: CRLF e conflitti) e #2 (port
+  Rust: da decidere, proposto un repository separato).
 - Ri-registrare Snake GIF e screenshot del playground con llama.cpp.
 - Cache a finestra compatta con rami condivisi (oggi `swa_full`): servirebbe potare la sequenza 0
   solo nella cache SWA, cosa che l'API pubblica non permette.

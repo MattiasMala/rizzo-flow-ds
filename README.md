@@ -116,7 +116,7 @@ sha256. `rizzo devices` shows what the runtime sees and what `--device auto` wil
 | --- | --- | --- |
 | Windows or Linux, NVIDIA GPU | `cuda` — CUDA 13 libraries included; needs a recent driver, no toolkit | **tested on Windows 10 + RTX 5060 Ti**: every current number in this README. Linux not tried |
 | Windows or Linux, AMD or Intel GPU | `vulkan` — uses the GPU driver you already have | Community reports cover an AMD Radeon 780M and Intel Iris Xe; see [#11](https://github.com/Rizzo-AI-Academy/rizzo-flow/issues/11) and [#7](https://github.com/Rizzo-AI-Academy/rizzo-flow/issues/7). The Intel run used Q4_K_M; these reports have not been independently reproduced by the maintainers. |
-| Mac, Apple Silicon | `metal` | A community report covers an M3 Pro; see [#5](https://github.com/Rizzo-AI-Academy/rizzo-flow/issues/5). The run has not been independently reproduced by the maintainers; an M4 device-selection issue is tracked in [#9](https://github.com/Rizzo-AI-Academy/rizzo-flow/issues/9). |
+| Mac, Apple Silicon | `metal` | A community report covers an M3 Pro; see [#5](https://github.com/Rizzo-AI-Academy/rizzo-flow/issues/5). The run has not been independently reproduced by the maintainers. The two fixes it needed (context freed before exit, a warning when an x86_64 Python under Rosetta hides the GPU) are merged ([#4](https://github.com/Rizzo-AI-Academy/rizzo-flow/pull/4)), and so is `--device metal` on M4 ([#9](https://github.com/Rizzo-AI-Academy/rizzo-flow/issues/9)). |
 | No GPU | `vulkan` falls back to the CPU; or `--runtime cpu` | CPU mode was reported on an Intel laptop with an iGPU ([#7](https://github.com/Rizzo-AI-Academy/rizzo-flow/issues/7)); a GPU-free host has not been tested. |
 
 Other builds on request: `uv run rizzo download --only runtime --runtime rocm` (AMD, ROCm/HIP),
@@ -504,8 +504,10 @@ evaluator reports accuracy, NLL, Brier, ECE and coverage.
   evidence is missing (6 of 36 cases, against SemIf's 1).
 - Residual position bias; permutation debiasing is not implemented.
 - 26 options per question (Jev: 255; SemIf: 16). Beyond that you need two stages.
-- **Tested on one machine.** Only Windows + NVIDIA (CUDA and Vulkan builds) has been run by us;
-  macOS/Metal, Linux, AMD, Intel and CPU-only are untested.
+- **Tested by us on one machine.** Only Windows + NVIDIA (CUDA and Vulkan builds) has been run
+  by us. Community reports cover macOS/Metal (M3 Pro), AMD and Intel iGPUs with Vulkan on Linux
+  and Windows, and CPU-only on an Intel laptop (see the hardware table); ROCm, SYCL and a
+  GPU-free machine are untested.
 - llama.cpp is driven through ctypes bindings tied to one pinned release (`b11081`): a build of
   another commit can crash instead of failing cleanly.
 - The KV cache costs ~144 KiB per token on the 4B, four times what the MLX runtime needs:
@@ -557,6 +559,22 @@ Architecture notes and the current state of the work: [CLAUDE.md](CLAUDE.md) (It
   and honest measurements. It convinced us to make llama.cpp the default runtime for every
   GPU vendor. The implementation on `main` is a separate one (prebuilt binaries instead of a
   build step); their fix to `.gitignore` for local result files is merged as their commit.
+  Then, on the RX 7900 XTX, they found `rizzo download` installing the CUDA build on an AMD
+  machine that only had a leftover `libcuda.so.1`, and fixed it: the probe now asks the driver
+  for a device ([pull request #6](https://github.com/Rizzo-AI-Academy/rizzo-flow/pull/6)).
+- [**danilocarta**](https://github.com/danilocarta) — the first run on a Mac: M3 Pro, Metal,
+  with numbers ([issue #5](https://github.com/Rizzo-AI-Academy/rizzo-flow/issues/5)), and the two
+  fixes it needed: the context freed before exit, where Metal aborted every command, and a
+  warning when an x86_64 Python under Rosetta silently costs the GPU
+  ([pull request #4](https://github.com/Rizzo-AI-Academy/rizzo-flow/pull/4)).
+- [**radqnico**](https://github.com/radqnico) — `--kv-type q8_0|q4_0`, a quantized KV cache for
+  long contexts on small GPUs
+  ([pull request #10](https://github.com/Rizzo-AI-Academy/rizzo-flow/pull/10)).
+- [**yjnhk**](https://github.com/yjnhk) — the first Intel run: Iris Xe with Vulkan, and the first
+  CPU-only numbers ([issue #7](https://github.com/Rizzo-AI-Academy/rizzo-flow/issues/7)).
+- [**FrancescoLength**](https://github.com/FrancescoLength) — the first AMD run on real AMD
+  hardware: Radeon 780M with Vulkan on Linux, with a lesson on wording for domain tasks
+  ([issue #11](https://github.com/Rizzo-AI-Academy/rizzo-flow/issues/11)).
 - [**MrJev**](https://github.com/MrJev) — found that `NaN` in a request body returned a 500 where
   every other malformed input returns a clean 422
   ([issue #3](https://github.com/Rizzo-AI-Academy/rizzo-flow/issues/3)), and independently
@@ -572,7 +590,9 @@ Architecture notes and the current state of the work: [CLAUDE.md](CLAUDE.md) (It
   on Apple silicon, where the backend registers itself as `MTL`
   ([issue #9](https://github.com/Rizzo-AI-Academy/rizzo-flow/issues/9),
   [pull request #14](https://github.com/Rizzo-AI-Academy/rizzo-flow/pull/14)). The fix on `main` is
-  a wider one, written separately; both pointed at the right line.
+  a wider one, written separately; both pointed at the right line. dajiaohuang also brought the
+  community hardware reports into the READMEs and the landing page, kept apart from what we
+  verified ourselves ([pull request #13](https://github.com/Rizzo-AI-Academy/rizzo-flow/pull/13)).
 
 Want to be next? The most useful next reports are from Linux, other AMD or Intel GPUs,
 different Apple Silicon models, ROCm/SYCL builds, or a dedicated CPU-only machine. Please
