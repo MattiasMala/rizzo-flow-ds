@@ -381,7 +381,7 @@ class Session:
         # Logits are read at one position per sequence; the default reserves n_batch rows of
         # the whole vocabulary.
         params.n_outputs_max = n_seq_max
-        if kv_type:                      # None: keep llama.cpp's own default (F16)
+        if kv_type:  # None: keep llama.cpp's own default (F16)
             params.type_k = params.type_v = KV_TYPES[kv_type]
         params.offload_kqv = chosen is not None
         params.no_perf = True

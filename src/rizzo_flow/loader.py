@@ -31,6 +31,8 @@ def load_backend(
             raise ValueError("--quant selects a GGUF file (llama backend); with MLX use --bits 4|8")
         if device not in MLX_DEVICES:
             raise ValueError(f"--device {device} exists only in the llama backend")
+        if kv_type:
+            raise ValueError("--kv-type exists only in the llama backend")
         from .backend import SparkBackend
 
         return SparkBackend.load(

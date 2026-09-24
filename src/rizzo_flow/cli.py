@@ -83,7 +83,7 @@ def main():
             choices=("f16", "q8_0", "q4_0"),
             default=None,
             help="KV cache precision (llama backend): q8_0 halves it, q4_0 quarters it; "
-                 "default is llama.cpp's own (f16). Use it when a long --ctx does not fit",
+            "default is llama.cpp's own (f16). Use it when a long --ctx does not fit",
         )
         # --max-tokens is the former name, kept as an alias.
         p.add_argument(
