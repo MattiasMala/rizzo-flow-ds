@@ -11,7 +11,9 @@ di avere probabilità calibrate o qualità superiore a SemIf.
 GPU Apple, NVIDIA, AMD e Intel oppure sola CPU, senza compilare nulla. MLX, il runtime originale
 del progetto, resta disponibile con `--backend mlx`. Verificato con i pesi reali su Windows 10 +
 RTX 5060 Ti (build CUDA e build Vulkan): 65 test superati, API funzionante, smoke Q8_0 0.95 con
-66 ms di mediana. Risultati, errori e limiti sono in [results/README.md](../results/README.md).
+66 ms di mediana. Segnalazioni pubbliche descrivono anche prove su Mac M3 Pro/Metal, Radeon 780M e
+Intel Iris Xe/Vulkan, oltre alla modalità CPU su un portatile Intel; non sono state riprodotte dai
+manutentori ([#5](https://github.com/Rizzo-AI-Academy/rizzo-flow/issues/5), [#7](https://github.com/Rizzo-AI-Academy/rizzo-flow/issues/7), [#11](https://github.com/Rizzo-AI-Academy/rizzo-flow/issues/11)). Risultati, errori e limiti sono in [results/README.md](../results/README.md).
 
 ## Avvio
 
@@ -35,10 +37,11 @@ GPU. `--runtime rocm|sycl|vulkan|cpu` forza un'altra build; più build possono c
 `--device vulkan` sceglie quale usare. `RIZZO_LLAMA_DIR` punta a una build propria, che deve
 essere dello stesso commit (`161755f`) perché i binding ctypes ricalcano quell'header.
 
-**Cosa è stato provato davvero:** Windows 10 + RTX 5060 Ti, build CUDA e build Vulkan sulla stessa
-scheda (stesse risposte: 3 argmax diversi su 252). macOS/Metal, Linux, GPU AMD e Intel, ROCm, SYCL
-e sola CPU **non sono stati provati**: i pacchetti sono fissati e verificati, il codice di
-caricamento è scritto per quei sistemi, ma nessuno l'ha ancora eseguito lì.
+**Cosa è stato provato dal progetto:** Windows 10 + RTX 5060 Ti, build CUDA e build Vulkan sulla
+stessa scheda (stesse risposte: 3 argmax diversi su 252). Segnalazioni pubbliche riportano un run
+Mac M3 Pro/Metal, AMD Radeon 780M/Vulkan, Intel Iris Xe/Vulkan e una prova in modalità CPU su un
+portatile Intel; sono riferite nei link sopra ma non riprodotte dai manutentori. Linux, ROCm, SYCL
+e una macchina senza GPU dedicata restano da verificare.
 
 I pesi sono i GGUF pubblicati dagli autori del modello
 ([4B](https://huggingface.co/XHToken/Spark-X2.5-4B-GGUF),
