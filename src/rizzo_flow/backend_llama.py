@@ -67,6 +67,7 @@ class LlamaBackend:
         prefill_chunk=512,
         threads=None,
         runtime_dir=None,
+        kv_type=None,
     ):
         path = Path(path).resolve()
         if not path.is_file():
@@ -89,6 +90,7 @@ class LlamaBackend:
             n_ubatch=prefill_chunk,
             n_seq_max=batch_size + 1,
             threads=threads,
+            kv_type=kv_type,
         )
         try:
             architecture = session.meta("general.architecture")
