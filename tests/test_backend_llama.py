@@ -177,6 +177,7 @@ IGPU = Device(2, "Vulkan0", "Intel(R) UHD Graphics", "igpu", "Vulkan", 32 << 30)
 RADEON = Device(3, "Vulkan1", "AMD Radeon RX 7900 XTX", "gpu", "Vulkan", 24 << 30)
 SMALL = Device(4, "Vulkan2", "AMD Radeon RX 6600", "gpu", "Vulkan", 8 << 30)
 GEFORCE = Device(5, "CUDA0", "NVIDIA GeForce RTX 5060 Ti", "gpu", "CUDA", 16 << 30)
+METAL = Device(6, "MTL0", "Apple M4", "gpu", "MTL", 16 << 30)  # Apple registers itself as MTL
 
 
 def test_device_choice():
@@ -192,6 +193,19 @@ def test_device_choice():
         choose_device([CPU], "gpu")  # an explicit request is never downgraded
     with pytest.raises(ValueError, match="rizzo download"):
         choose_device(machine, "cuda")
+
+
+def test_metal_is_found_under_its_registry_name():
+    # Apple's backend calls itself MTL: `--device metal` must still find it (issue #9).
+    assert choose_device([CPU, METAL], "metal") is METAL
+    assert choose_device([CPU, METAL], "Metal") is METAL
+    assert choose_device([CPU, METAL], "mtl") is METAL
+    assert choose_device([CPU, METAL], "MTL0") is METAL  # one named device, as before
+    assert choose_device([CPU, METAL], "auto") is METAL
+    assert choose_device([CPU, METAL], "m4") is METAL  # description still matches
+    with pytest.raises(ValueError, match="no such GPU"):
+        choose_device([CPU, METAL], "cuda")  # an alias never widens another family
+    assert choose_device([CPU, IGPU, RADEON], "vulkan") is RADEON  # numbered names unaffected
 
 
 def test_loader_rejects_options_of_the_other_backend(tmp_path):

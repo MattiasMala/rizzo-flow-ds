@@ -127,9 +127,14 @@ Un client scritto per l'API ospitata può puntare qui cambiando soltanto l'URL d
   8000 caratteri per `instructions` e per ogni descrizione. `instructions`/`criteria` strutturati
   vengono serializzati come JSON canonico.
 - `usage.input_tokens` conta lo state una volta sola più i suffissi; `output_tokens` è sempre 0.
+- I campi ignoti al primo livello vengono ignorati, come fa l'API ospitata: gli SDK inoltrano
+  quelli passati da chi chiama. Dentro una domanda restano un 422: un `criteria` scritto male
+  non deve passare in silenzio.
 - `x_rizzo` (tempi, fingerprint, stato delle probabilità) è un'estensione fuori dal contratto.
 - Autenticazione Bearer come l'originale, attiva solo se è impostata `RIZZO_API_KEY`
-  (altrimenti l'header è ignorato). Errori: 401 e 422. Nessun rate limit, quindi niente 429/529.
+  (altrimenti l'header è ignorato). Errori: 401, 422 e 400
+  (`{"error_type": "api_usage_error"}`) per un nome di modello che questo server non serve.
+  Nessun rate limit, quindi niente 429/529.
 
 `/v1/decisions` resta l'API nativa completa: `numeric`, astensione, policy, logit e statistiche.
 

@@ -275,12 +275,19 @@ class Library:
         return free.value
 
 
+# A runtime family as the user names it -> every spelling ggml may register it under. Apple's
+# backend calls itself MTL (devices MTL0, MTL1), so plain `--device metal` would match nothing.
+DEVICE_ALIASES = {"metal": ("metal", "mtl"), "rocm": ("rocm", "hip")}
+
+
 def choose_device(devices: list[Device], wanted: str) -> Device | None:
     """The device that runs the whole model, or None for the CPU.
 
     `auto` prefers a discrete GPU, then an integrated one, then the CPU. Anything else is a
     request: `gpu` for any GPU, or text matched against backend, name and description
-    (`cuda`, `vulkan`, `metal`, `Vulkan1`, `radeon`). A request that cannot be met raises.
+    (`cuda`, `vulkan`, `metal`, `Vulkan1`, `radeon`). A family named in `DEVICE_ALIASES` also
+    matches the other spellings of that family, and a name matches its numbered devices
+    (`metal` -> backend `MTL`, device `MTL0`). A request that cannot be met raises.
     """
     gpus = sorted(
         (d for d in devices if d.kind in ("gpu", "igpu")),
@@ -291,12 +298,8 @@ def choose_device(devices: list[Device], wanted: str) -> Device | None:
     if wanted == "auto":
         return gpus[0] if gpus else None
     if wanted != "gpu":
-        needle = wanted.lower()
-        gpus = [
-            d
-            for d in gpus
-            if needle in (d.backend.lower(), d.name.lower()) or needle in d.description.lower()
-        ]
+        needles = DEVICE_ALIASES.get(wanted.lower(), (wanted.lower(),))
+        gpus = [d for d in gpus if any(_matches(d, needle) for needle in needles)]
     if not gpus:
         seen = ", ".join(f"{d.name} ({d.description})" for d in devices) or "none"
         raise ValueError(
@@ -304,6 +307,17 @@ def choose_device(devices: list[Device], wanted: str) -> Device | None:
             "Install another runtime with `rizzo download --only runtime --runtime ...`."
         )
     return gpus[0]
+
+
+def _matches(device: Device, needle: str) -> bool:
+    """One spelling against one device: backend or device name, or text in the description."""
+    name = device.name.lower()
+    return (
+        needle == device.backend.lower()
+        or needle == name
+        or (name.startswith(needle) and name[len(needle) :].isdigit())
+        or needle in device.description.lower()
+    )
 
 
 class Session:

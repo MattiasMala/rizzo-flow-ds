@@ -78,6 +78,21 @@ def test_api_and_all_input_validation(payload):
         assert client.post("/v1/decisions", json=payload).status_code == 422
 
 
+def test_non_json_floats_are_a_client_error(payload):
+    # `json.loads` accepts NaN and Infinity; echoing them back turned the 422 into a 500 (issue #3).
+    with TestClient(create_app(Engine(FakeBackend()))) as client:
+        headers = {"content-type": "application/json"}
+        for body in (
+            '{"state": NaN, "questions": {}}',
+            '{"state": {"amount": NaN}, "questions": {"a": {"type": "boolean", "instructions": "x"}}}',
+            '{"state": {"amount": Infinity}, "questions": {"a": {"type": "boolean", "instructions": "x"}}}',
+        ):
+            response = client.post("/v1/decisions", content=body, headers=headers)
+            assert response.status_code == 422, body
+            detail = response.json()["detail"]
+            assert isinstance(detail, list) and detail  # still the usual shape, and serializable
+
+
 def test_temperature_fit_and_model_binding():
     rows = [{"type": "choice", "logits": [0, 8], "label_index": int(i % 2 == 0)} for i in range(20)]
     calibration = fit_temperature(rows, "test-only")

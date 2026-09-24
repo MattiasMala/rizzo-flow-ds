@@ -2,12 +2,22 @@
 
 import hmac
 import os
+from math import isfinite
 from pathlib import Path
 
 from fastapi import Depends, FastAPI, Header, HTTPException
-from fastapi.responses import FileResponse, HTMLResponse, RedirectResponse
+from fastapi import Request as HttpRequest
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse
 
-from .compat import SystemOneRequest, from_native, list_models, resolve_model, to_native
+from .compat import (
+    SystemOneRequest,
+    UnknownModel,
+    from_native,
+    list_models,
+    resolve_model,
+    to_native,
+)
 from .responses import Response
 from .schema import Request
 
@@ -17,6 +27,23 @@ SNAKE = Path(__file__).with_name("snake.html")
 LOGO = Path(__file__).with_name("logo.png")
 
 
+def jsonable(value):
+    """The same structure, with whatever `json.dumps` would refuse replaced by its text.
+
+    Two things reach here: non-JSON floats (NaN, Infinity, which `json.loads` accepts on the
+    way in) echoed back as the offending input, and the exception object a validator raised.
+    """
+    if isinstance(value, float):
+        return value if isfinite(value) else f"<{value}>"
+    if isinstance(value, dict):
+        return {str(key): jsonable(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [jsonable(item) for item in value]
+    if isinstance(value, (str, int, bool)) or value is None:
+        return value
+    return str(value)
+
+
 def create_app(engine, api_key=None):
     app = FastAPI(
         title="Rizzo Flow",
@@ -24,6 +51,13 @@ def create_app(engine, api_key=None):
         description="Typed decisions with a local Spark-X2.5 model; no text generation.",
     )
     api_key = api_key if api_key is not None else os.environ.get(API_KEY_ENV)
+
+    @app.exception_handler(RequestValidationError)
+    def invalid_request(request: HttpRequest, error: RequestValidationError):
+        # `json.loads` accepts NaN and Infinity, JSON does not. Validation rejects them, but the
+        # 422 body echoes the offending input, and serializing that would fail inside the
+        # response and turn a client error into a 500. Report them instead of echoing them.
+        return JSONResponse(status_code=422, content={"detail": jsonable(error.errors())})
 
     def authorize(authorization: str | None = Header(default=None)):
         # Bearer auth mirrors the hosted API; it is enforced only when a key is configured.
@@ -49,6 +83,12 @@ def create_app(engine, api_key=None):
             served = resolve_model(request.model, engine.backend.metadata)
             native, options = to_native(request)
             return from_native(request, engine.decide(native), options, served)
+        except UnknownModel as error:
+            # The hosted API answers an unserved model name with a 400 and a typed detail.
+            raise HTTPException(
+                status_code=400,
+                detail={"error_type": "api_usage_error", "message": str(error)},
+            ) from error
         except ValueError as error:
             raise HTTPException(status_code=422, detail=str(error)) from error
 

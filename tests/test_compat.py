@@ -1,3 +1,5 @@
+import copy
+
 import pytest
 from fastapi.testclient import TestClient
 from test_service import FakeBackend
@@ -81,9 +83,17 @@ def test_validation_models_and_auth(body):
     with client() as http:
         names = [m["name"] for m in http.get("/v1/models").json()["models"]]
         assert "rizzo-latest" in names and "jev-latest" in names
-        assert http.post("/v1/systemone", json={**body, "model": "gpt-unknown"}).status_code == 422
+        unknown = http.post("/v1/systemone", json={**body, "model": "gpt-unknown"})
+        assert unknown.status_code == 400  # the hosted API's shape, not a validation error
+        assert unknown.json()["detail"]["error_type"] == "api_usage_error"
         missing = {k: v for k, v in body.items() if k != "model"}
         assert http.post("/v1/systemone", json=missing).status_code == 422
+        # The hosted API does not forbid unknown top-level fields; the SDK forwards them.
+        extra = http.post("/v1/systemone", json={**body, "x_trace_id": "abc", "seed": 7})
+        assert extra.status_code == 200 and "x_trace_id" not in extra.json()
+        unknown_question_field = copy.deepcopy(body)
+        unknown_question_field["questions"]["frustration"]["temperature"] = 0.5
+        assert http.post("/v1/systemone", json=unknown_question_field).status_code == 422
         body["questions"]["frustration"]["criteria"] = ["only one"]
         assert http.post("/v1/systemone", json=body).status_code == 422
         assert "Rizzo Flow" in http.get("/playground").text

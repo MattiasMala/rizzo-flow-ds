@@ -299,8 +299,13 @@ the real SDK). **The interface is compatible, the model is not Jev:**
   Jev's exact formula is not public. It describes the *shape* of the distribution, not the
   probability of being right.
 - `usage.input_tokens` counts the state once plus the question suffixes; `output_tokens` is always 0.
+- Unknown top-level fields are ignored, as the hosted API does: SDKs forward caller-supplied ones.
+  Unknown fields *inside* a question are still a 422 — a misspelled `criteria` must not pass silently.
+- **At most 26 options per `choice`** (the hosted API documents 255): every option is one answer
+  letter. Beyond that, split the question into two stages.
 - `x_rizzo` (timings, fingerprint) is an extension outside the contract.
-- Bearer auth like the original, enforced only if `RIZZO_API_KEY` is set. Errors: 401, 422.
+- Bearer auth like the original, enforced only if `RIZZO_API_KEY` is set. Errors: 401, 422, and
+  400 (`{"error_type": "api_usage_error"}`) for a model name this server does not answer for.
 
 **Asking many questions at once is the point.** All questions in one request share the state's KV
 cache: 8 yes/no questions on a 218-token contract cost 1 prefill + 2 micro-batches, 136 ms of
