@@ -162,6 +162,23 @@ richieste HTTP concorrenti sono serializzate; il parallelismo è *dentro* la ric
   palette per frame da istogramma a 15 bit, LZW, durata reale dei frame, max 900 frame, download via
   `<a download>`). `paintBoard` è condivisa tra canvas visibile e registratore.
 
+### Dead Cells (`deadcells/`, 25 settembre 2026)
+
+Richiesta dell'utente: albero/tabella delle build migliori e un programma che descriva lo schermo
+di Dead Cells (nemici, oggetti, stanze, percorso) con la latenza minima. Pacchetto separato come
+`training/` (ambiente proprio, `deadcells/requirements.txt`: numpy, OpenCV, mss/dxcam,
+onnxruntime da scegliere), documentazione in `docs/deadcells.md`. Si lancia da `deadcells/`:
+`python -m deadcells builds|layout|describe|live|bench|calibrate|learn-digits|collect`; test con
+`python -m pytest -q deadcells/tests` (28, frame sintetici; `test_builds`/`decide` validano le
+richieste contro `rizzo_flow.schema`). Il `pytest` del progetto non li raccoglie.
+Cattura → HUD (maschere `cv2.inRange`, cifre per template) → minimappa (celle, BFS per
+dilatazioni, cache se la griglia non cambia) → YOLO ONNX (non addestrato) → tracker → JSON con
+posizioni in altezze del giocatore; le decisioni (`/v1/decisions`) girano su un thread a parte.
+Build e scaling da `deadcells.wiki.gg` (tabelle Cargo, v3.5), build scelte dalla community
+(fonti per build, due composte da noi: `composed: true`); grafo dei biomi con rune e BSC.
+**Mai provato sul gioco**: layout HUD/minimappa = ipotesi (`calibrated: false`), nessun
+rilevatore addestrato, nessuno strato di input. Latenza sintetica 2–3 ms senza rilevatore.
+
 ### Sito del progetto (GitHub Pages)
 
 `docs/index.html` è la landing page statica, **nello stile del sito di rizzo-pii** (chiaro, centrato,

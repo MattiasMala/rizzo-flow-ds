@@ -1,0 +1,11 @@
+# Dead Cells perception, separate from the project's .venv (like training/).
+# Tested on 2026-09-25 with Python 3.11 on Linux (synthetic frames only).
+numpy==2.5.3
+opencv-python-headless==5.0.0.93
+pytest>=8.4
+pydantic>=2.11,<3
+# Screen capture (not tested here: no game in the test container).
+mss>=10
+dxcam>=0.0.5; sys_platform == "win32"
+# Detector runtime, once a model is trained. Pick ONE of:
+#   onnxruntime-gpu (NVIDIA CUDA), onnxruntime-directml (Windows: AMD/Intel/NVIDIA), onnxruntime (CPU)

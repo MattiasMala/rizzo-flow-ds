@@ -1,0 +1,599 @@
+{
+ "checked_on": "2026-09-25",
+ "source": "https://deadcells.wiki.gg/wiki/Biomes and https://deadcells.wiki.gg/wiki/Runes",
+ "notes": "The Bank (golden-chest bonus biome) can replace a non-boss biome and is not in the graph. Runes that open no route (Challenger's, Explorer's, Customization, Homunculus) are not listed.",
+ "start": "Prisoners' Quarters",
+ "bosses": {
+  "Black Bridge": "The Concierge",
+  "Insufferable Crypt": "Conjunctivius",
+  "Nest": "Mama Tick",
+  "Defiled Necropolis": "Death",
+  "Clock Room": "The Time Keeper",
+  "Guardian's Haven": "The Giant",
+  "Mausoleum": "The Scarecrow",
+  "Throne Room": "Hand of the King",
+  "Observatory": "The Collector",
+  "The Crown": "The Queen",
+  "Master's Keep": "Dracula"
+ },
+ "runes": {
+  "Vine": {
+   "found_in": "Promenade of the Condemned",
+   "guardian": "Elite Undead Archer"
+  },
+  "Teleportation": {
+   "found_in": "Toxic Sewers",
+   "guardian": "Elite Slasher"
+  },
+  "Ram": {
+   "found_in": "Ossuary",
+   "guardian": "Elite Slasher"
+  },
+  "Spider": {
+   "found_in": "Slumbering Sanctuary",
+   "guardian": "Elite Caster"
+  }
+ },
+ "exits": [
+  {
+   "from": "Prisoners' Quarters",
+   "to": "Promenade of the Condemned",
+   "rune": null,
+   "condition": null,
+   "note": null
+  },
+  {
+   "from": "Prisoners' Quarters",
+   "to": "Toxic Sewers",
+   "rune": "Vine",
+   "condition": null,
+   "note": null
+  },
+  {
+   "from": "Prisoners' Quarters",
+   "to": "Dilapidated Arboretum",
+   "rune": "Teleportation",
+   "condition": null,
+   "note": null
+  },
+  {
+   "from": "Prisoners' Quarters",
+   "to": "Castle's Outskirts",
+   "rune": null,
+   "condition": "Return to Castlevania DLC",
+   "note": null
+  },
+  {
+   "from": "Promenade of the Condemned",
+   "to": "Ramparts",
+   "rune": null,
+   "condition": null,
+   "note": null
+  },
+  {
+   "from": "Promenade of the Condemned",
+   "to": "Prison Depths",
+   "rune": "Spider",
+   "condition": null,
+   "note": null
+  },
+  {
+   "from": "Promenade of the Condemned",
+   "to": "Ossuary",
+   "rune": "Teleportation",
+   "condition": null,
+   "note": null
+  },
+  {
+   "from": "Promenade of the Condemned",
+   "to": "Morass of the Banished",
+   "rune": "Teleportation",
+   "condition": null,
+   "note": null
+  },
+  {
+   "from": "Toxic Sewers",
+   "to": "Ramparts",
+   "rune": null,
+   "condition": null,
+   "note": null
+  },
+  {
+   "from": "Toxic Sewers",
+   "to": "Corrupted Prison",
+   "rune": "Spider",
+   "condition": null,
+   "note": null
+  },
+  {
+   "from": "Toxic Sewers",
+   "to": "Ancient Sewers",
+   "rune": "Ram",
+   "condition": null,
+   "note": null
+  },
+  {
+   "from": "Toxic Sewers",
+   "to": "Dracula's Castle (depth 3)",
+   "rune": null,
+   "condition": "after beating Dracula",
+   "note": null
+  },
+  {
+   "from": "Dilapidated Arboretum",
+   "to": "Morass of the Banished",
+   "rune": null,
+   "condition": null,
+   "note": null
+  },
+  {
+   "from": "Dilapidated Arboretum",
+   "to": "Ramparts",
+   "rune": null,
+   "condition": null,
+   "note": null
+  },
+  {
+   "from": "Dilapidated Arboretum",
+   "to": "Prison Depths",
+   "rune": "Spider",
+   "condition": null,
+   "note": null
+  },
+  {
+   "from": "Castle's Outskirts",
+   "to": "Dracula's Castle (depth 3)",
+   "rune": null,
+   "condition": null,
+   "note": null
+  },
+  {
+   "from": "Castle's Outskirts",
+   "to": "Ossuary",
+   "rune": null,
+   "condition": "after beating Dracula",
+   "note": null
+  },
+  {
+   "from": "Castle's Outskirts",
+   "to": "Corrupted Prison",
+   "rune": "Spider",
+   "condition": "after beating Dracula",
+   "note": null
+  },
+  {
+   "from": "Prison Depths",
+   "to": "Ossuary",
+   "rune": null,
+   "condition": null,
+   "note": null
+  },
+  {
+   "from": "Prison Depths",
+   "to": "Morass of the Banished",
+   "rune": null,
+   "condition": null,
+   "note": null
+  },
+  {
+   "from": "Prison Depths",
+   "to": "Ancient Sewers",
+   "rune": null,
+   "condition": "1+ Boss Stem Cell",
+   "note": null
+  },
+  {
+   "from": "Corrupted Prison",
+   "to": "Ancient Sewers",
+   "rune": null,
+   "condition": null,
+   "note": null
+  },
+  {
+   "from": "Corrupted Prison",
+   "to": "Ramparts",
+   "rune": null,
+   "condition": "1+ Boss Stem Cell",
+   "note": null
+  },
+  {
+   "from": "Ramparts",
+   "to": "Black Bridge",
+   "rune": null,
+   "condition": null,
+   "note": null
+  },
+  {
+   "from": "Ramparts",
+   "to": "Insufferable Crypt",
+   "rune": null,
+   "condition": "3+ Boss Stem Cells",
+   "note": null
+  },
+  {
+   "from": "Ancient Sewers",
+   "to": "Insufferable Crypt",
+   "rune": null,
+   "condition": null,
+   "note": null
+  },
+  {
+   "from": "Ossuary",
+   "to": "Black Bridge",
+   "rune": null,
+   "condition": null,
+   "note": null
+  },
+  {
+   "from": "Morass of the Banished",
+   "to": "Nest",
+   "rune": null,
+   "condition": null,
+   "note": null
+  },
+  {
+   "from": "Dracula's Castle (depth 3)",
+   "to": "Defiled Necropolis",
+   "rune": null,
+   "condition": null,
+   "note": null
+  },
+  {
+   "from": "Dracula's Castle (depth 3)",
+   "to": "Black Bridge",
+   "rune": null,
+   "condition": "after beating Dracula",
+   "note": null
+  },
+  {
+   "from": "Black Bridge",
+   "to": "Stilt Village",
+   "rune": null,
+   "condition": null,
+   "note": null
+  },
+  {
+   "from": "Black Bridge",
+   "to": "Fractured Shrines",
+   "rune": null,
+   "condition": null,
+   "note": null
+  },
+  {
+   "from": "Black Bridge",
+   "to": "Slumbering Sanctuary",
+   "rune": "Spider",
+   "condition": null,
+   "note": null
+  },
+  {
+   "from": "Insufferable Crypt",
+   "to": "Slumbering Sanctuary",
+   "rune": null,
+   "condition": null,
+   "note": null
+  },
+  {
+   "from": "Insufferable Crypt",
+   "to": "Graveyard",
+   "rune": "Spider",
+   "condition": null,
+   "note": null
+  },
+  {
+   "from": "Nest",
+   "to": "Stilt Village",
+   "rune": null,
+   "condition": null,
+   "note": null
+  },
+  {
+   "from": "Nest",
+   "to": "Fractured Shrines",
+   "rune": null,
+   "condition": null,
+   "note": null
+  },
+  {
+   "from": "Nest",
+   "to": "Graveyard",
+   "rune": "Spider",
+   "condition": null,
+   "note": null
+  },
+  {
+   "from": "Defiled Necropolis",
+   "to": "Slumbering Sanctuary",
+   "rune": null,
+   "condition": null,
+   "note": null
+  },
+  {
+   "from": "Defiled Necropolis",
+   "to": "Stilt Village",
+   "rune": null,
+   "condition": null,
+   "note": null
+  },
+  {
+   "from": "Defiled Necropolis",
+   "to": "Graveyard",
+   "rune": null,
+   "condition": null,
+   "note": null
+  },
+  {
+   "from": "Stilt Village",
+   "to": "Clock Tower",
+   "rune": null,
+   "condition": null,
+   "note": null
+  },
+  {
+   "from": "Stilt Village",
+   "to": "Forgotten Sepulcher",
+   "rune": "Teleportation",
+   "condition": null,
+   "note": null
+  },
+  {
+   "from": "Stilt Village",
+   "to": "Undying Shores",
+   "rune": null,
+   "condition": "after first reaching it from the Fractured Shrines",
+   "note": null
+  },
+  {
+   "from": "Slumbering Sanctuary",
+   "to": "Clock Tower",
+   "rune": null,
+   "condition": null,
+   "note": null
+  },
+  {
+   "from": "Slumbering Sanctuary",
+   "to": "Forgotten Sepulcher",
+   "rune": null,
+   "condition": null,
+   "note": null
+  },
+  {
+   "from": "Slumbering Sanctuary",
+   "to": "Cavern",
+   "rune": null,
+   "condition": "2+ Boss Stem Cells and the Giant killed once",
+   "note": null
+  },
+  {
+   "from": "Graveyard",
+   "to": "Forgotten Sepulcher",
+   "rune": null,
+   "condition": null,
+   "note": null
+  },
+  {
+   "from": "Graveyard",
+   "to": "Cavern",
+   "rune": null,
+   "condition": "Cavern Key needed the first time",
+   "note": null
+  },
+  {
+   "from": "Graveyard",
+   "to": "Undying Shores",
+   "rune": null,
+   "condition": null,
+   "note": null
+  },
+  {
+   "from": "Graveyard",
+   "to": "Clock Tower",
+   "rune": null,
+   "condition": "only if nothing else is reachable",
+   "note": null
+  },
+  {
+   "from": "Fractured Shrines",
+   "to": "Clock Tower",
+   "rune": null,
+   "condition": null,
+   "note": null
+  },
+  {
+   "from": "Fractured Shrines",
+   "to": "Undying Shores",
+   "rune": null,
+   "condition": "Cultist Outfit needed the first time",
+   "note": null
+  },
+  {
+   "from": "Fractured Shrines",
+   "to": "Forgotten Sepulcher",
+   "rune": "Teleportation",
+   "condition": null,
+   "note": "passage in the Clock Tower route"
+  },
+  {
+   "from": "Clock Tower",
+   "to": "Clock Room",
+   "rune": null,
+   "condition": null,
+   "note": null
+  },
+  {
+   "from": "Forgotten Sepulcher",
+   "to": "Clock Room",
+   "rune": null,
+   "condition": null,
+   "note": null
+  },
+  {
+   "from": "Forgotten Sepulcher",
+   "to": "Guardian's Haven",
+   "rune": null,
+   "condition": "2+ Boss Stem Cells and the Giant killed once",
+   "note": null
+  },
+  {
+   "from": "Cavern",
+   "to": "Guardian's Haven",
+   "rune": null,
+   "condition": null,
+   "note": null
+  },
+  {
+   "from": "Cavern",
+   "to": "Mausoleum",
+   "rune": null,
+   "condition": null,
+   "note": null
+  },
+  {
+   "from": "Undying Shores",
+   "to": "Mausoleum",
+   "rune": null,
+   "condition": null,
+   "note": null
+  },
+  {
+   "from": "Clock Room",
+   "to": "High Peak Castle",
+   "rune": null,
+   "condition": null,
+   "note": null
+  },
+  {
+   "from": "Clock Room",
+   "to": "Derelict Distillery",
+   "rune": null,
+   "condition": "after meeting the Hand of the King once",
+   "note": null
+  },
+  {
+   "from": "Clock Room",
+   "to": "Infested Shipwreck",
+   "rune": null,
+   "condition": null,
+   "note": null
+  },
+  {
+   "from": "Clock Room",
+   "to": "Dracula's Castle (depth 6)",
+   "rune": null,
+   "condition": "after beating Death once",
+   "note": null
+  },
+  {
+   "from": "Guardian's Haven",
+   "to": "High Peak Castle",
+   "rune": null,
+   "condition": null,
+   "note": null
+  },
+  {
+   "from": "Guardian's Haven",
+   "to": "Derelict Distillery",
+   "rune": null,
+   "condition": null,
+   "note": null
+  },
+  {
+   "from": "Guardian's Haven",
+   "to": "Infested Shipwreck",
+   "rune": null,
+   "condition": null,
+   "note": null
+  },
+  {
+   "from": "Guardian's Haven",
+   "to": "Throne Room",
+   "rune": null,
+   "condition": null,
+   "note": "gives 2 Scrolls of Power"
+  },
+  {
+   "from": "Mausoleum",
+   "to": "High Peak Castle",
+   "rune": null,
+   "condition": null,
+   "note": null
+  },
+  {
+   "from": "Mausoleum",
+   "to": "Derelict Distillery",
+   "rune": null,
+   "condition": null,
+   "note": null
+  },
+  {
+   "from": "Mausoleum",
+   "to": "Infested Shipwreck",
+   "rune": null,
+   "condition": null,
+   "note": null
+  },
+  {
+   "from": "High Peak Castle",
+   "to": "Throne Room",
+   "rune": null,
+   "condition": null,
+   "note": null
+  },
+  {
+   "from": "High Peak Castle",
+   "to": "Master's Keep",
+   "rune": null,
+   "condition": "after beating Dracula",
+   "note": null
+  },
+  {
+   "from": "Derelict Distillery",
+   "to": "Throne Room",
+   "rune": null,
+   "condition": "Distillery Key",
+   "note": null
+  },
+  {
+   "from": "Derelict Distillery",
+   "to": "Lighthouse",
+   "rune": null,
+   "condition": null,
+   "note": null
+  },
+  {
+   "from": "Infested Shipwreck",
+   "to": "Lighthouse",
+   "rune": null,
+   "condition": null,
+   "note": null
+  },
+  {
+   "from": "Dracula's Castle (depth 6)",
+   "to": "Master's Keep",
+   "rune": null,
+   "condition": null,
+   "note": null
+  },
+  {
+   "from": "Throne Room",
+   "to": "Astrolab",
+   "rune": null,
+   "condition": "5 Boss Stem Cells",
+   "note": null
+  },
+  {
+   "from": "Astrolab",
+   "to": "Observatory",
+   "rune": null,
+   "condition": null,
+   "note": null
+  },
+  {
+   "from": "Lighthouse",
+   "to": "The Crown",
+   "rune": null,
+   "condition": null,
+   "note": null
+  }
+ ]
+}

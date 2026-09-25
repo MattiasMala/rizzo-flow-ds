@@ -228,3 +228,8 @@ runtimes/
 # both are covered — with one, only directories match and local reports leak into commits.
 results/local-*
 .DS_Store
+# Dead Cells perception: local calibration, screenshots and datasets
+deadcells/calibration/
+deadcells/dataset/
+deadcells/models/
+deadcells/.venv-dc/

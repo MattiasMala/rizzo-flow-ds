@@ -1,0 +1,1009 @@
+{
+ "game_version": "3.5 \"The End is Near\" (19 Aug 2024)",
+ "checked_on": "2026-09-25",
+ "notes": "Scaling and mutation colours from the deadcells.wiki.gg Cargo tables (Items, Mutations). Builds are community picks (guides cited per build), not official; builds with composed=true were put together by us from the wiki's synergy notes. Item names are the English in-game names.",
+ "stats": {
+  "brutality": {
+   "colour": "red",
+   "themes": "bleed, fire, oil, fast melee"
+  },
+  "tactics": {
+   "colour": "purple",
+   "themes": "ranged, turrets, shock, poison"
+  },
+  "survival": {
+   "colour": "green",
+   "themes": "shields, heavy weapons, stun, root, slow, freeze"
+  }
+ },
+ "rules": [
+  "Each point in a stat gives +15% damage to items scaling with it (compounding: 1.15^(n-1)).",
+  "Dual-scaling items use the higher of their two stats.",
+  "Colorless items (cursed chests, freshly bought blueprints) and legendary items scale with the highest stat; ties go Brutality > Tactics > Survival.",
+  "Health grows with every stat: most with Survival, least with Tactics.",
+  "Mutations scale with their own stat; colorless mutations are fixed (except Frostbite and Instinct of the Master of Arms: highest stat)."
+ ],
+ "items": {
+  "Alchemic Carbine": {
+   "type": "weapon",
+   "scaling": [
+    "tactics"
+   ]
+  },
+  "Alucard's Shield": {
+   "type": "weapon",
+   "scaling": [
+    "brutality",
+    "survival"
+   ]
+  },
+  "Anathema": {
+   "type": "weapon",
+   "scaling": [
+    "tactics",
+    "survival"
+   ]
+  },
+  "Assassin's Dagger": {
+   "type": "weapon",
+   "scaling": [
+    "brutality"
+   ]
+  },
+  "Barnacle": {
+   "type": "skill",
+   "scaling": [
+    "tactics"
+   ]
+  },
+  "Baseball Bat": {
+   "type": "weapon",
+   "scaling": [
+    "brutality",
+    "survival"
+   ]
+  },
+  "Blood Sword": {
+   "type": "weapon",
+   "scaling": [
+    "brutality"
+   ]
+  },
+  "Bloodthirsty Shield": {
+   "type": "weapon",
+   "scaling": [
+    "brutality",
+    "survival"
+   ]
+  },
+  "Blowgun": {
+   "type": "weapon",
+   "scaling": [
+    "tactics"
+   ]
+  },
+  "Bow and Endless Quiver": {
+   "type": "weapon",
+   "scaling": [
+    "tactics"
+   ]
+  },
+  "Broadsword": {
+   "type": "weapon",
+   "scaling": [
+    "survival"
+   ]
+  },
+  "Cleaver": {
+   "type": "skill",
+   "scaling": [
+    "brutality"
+   ]
+  },
+  "Cocoon": {
+   "type": "skill",
+   "scaling": [
+    "tactics",
+    "survival"
+   ]
+  },
+  "Corrosive Cloud": {
+   "type": "skill",
+   "scaling": [
+    "brutality",
+    "tactics"
+   ]
+  },
+  "Crusher": {
+   "type": "skill",
+   "scaling": [
+    "tactics",
+    "survival"
+   ]
+  },
+  "Double Crossb-o-matic": {
+   "type": "skill",
+   "scaling": [
+    "tactics"
+   ]
+  },
+  "Electric Whip": {
+   "type": "weapon",
+   "scaling": [
+    "tactics"
+   ]
+  },
+  "Fire Blast": {
+   "type": "weapon",
+   "scaling": [
+    "brutality",
+    "tactics"
+   ]
+  },
+  "Fire Grenade": {
+   "type": "skill",
+   "scaling": [
+    "brutality"
+   ]
+  },
+  "Firebrands": {
+   "type": "weapon",
+   "scaling": [
+    "brutality",
+    "tactics"
+   ]
+  },
+  "Flamethrower Turret": {
+   "type": "skill",
+   "scaling": [
+    "brutality",
+    "tactics"
+   ]
+  },
+  "Flawless": {
+   "type": "weapon",
+   "scaling": [
+    "brutality",
+    "survival"
+   ]
+  },
+  "Front Line Shield": {
+   "type": "weapon",
+   "scaling": [
+    "brutality",
+    "survival"
+   ]
+  },
+  "Frost Blast": {
+   "type": "weapon",
+   "scaling": [
+    "tactics",
+    "survival"
+   ]
+  },
+  "Giantkiller": {
+   "type": "weapon",
+   "scaling": [
+    "brutality",
+    "survival"
+   ]
+  },
+  "Grappling Hook": {
+   "type": "skill",
+   "scaling": [
+    "brutality"
+   ]
+  },
+  "Heavy Turret": {
+   "type": "skill",
+   "scaling": [
+    "tactics"
+   ]
+  },
+  "Hemorrhage": {
+   "type": "weapon",
+   "scaling": [
+    "brutality",
+    "tactics"
+   ]
+  },
+  "Hokuto's Bow": {
+   "type": "weapon",
+   "scaling": [
+    "tactics"
+   ]
+  },
+  "Holy Water": {
+   "type": "skill",
+   "scaling": [
+    "brutality",
+    "survival"
+   ]
+  },
+  "Ice Armor": {
+   "type": "skill",
+   "scaling": [
+    "survival"
+   ]
+  },
+  "Ice Bow": {
+   "type": "weapon",
+   "scaling": [
+    "tactics",
+    "survival"
+   ]
+  },
+  "Ice Crossbow": {
+   "type": "weapon",
+   "scaling": [
+    "tactics",
+    "survival"
+   ]
+  },
+  "Ice Grenade": {
+   "type": "skill",
+   "scaling": [
+    "survival"
+   ]
+  },
+  "Ice Shield": {
+   "type": "weapon",
+   "scaling": [
+    "survival"
+   ]
+  },
+  "Indulgence": {
+   "type": "skill",
+   "scaling": [
+    "brutality",
+    "survival"
+   ]
+  },
+  "Infantry Bow": {
+   "type": "weapon",
+   "scaling": [
+    "brutality",
+    "tactics"
+   ]
+  },
+  "Iron Staff": {
+   "type": "weapon",
+   "scaling": [
+    "brutality",
+    "survival"
+   ]
+  },
+  "Knife Dance": {
+   "type": "skill",
+   "scaling": [
+    "brutality",
+    "tactics"
+   ]
+  },
+  "Lacerating Aura": {
+   "type": "skill",
+   "scaling": [
+    "brutality",
+    "tactics"
+   ]
+  },
+  "Leghugger": {
+   "type": "skill",
+   "scaling": [
+    "brutality",
+    "tactics"
+   ]
+  },
+  "Lightning Bolt": {
+   "type": "weapon",
+   "scaling": [
+    "tactics"
+   ]
+  },
+  "Lightning Rods": {
+   "type": "skill",
+   "scaling": [
+    "tactics"
+   ]
+  },
+  "Lightspeed": {
+   "type": "skill",
+   "scaling": [
+    "brutality",
+    "tactics"
+   ]
+  },
+  "Magnetic Grenade": {
+   "type": "skill",
+   "scaling": [
+    "tactics"
+   ]
+  },
+  "Marksman's Bow": {
+   "type": "weapon",
+   "scaling": [
+    "tactics"
+   ]
+  },
+  "Meat Skewer": {
+   "type": "weapon",
+   "scaling": [
+    "brutality"
+   ]
+  },
+  "Misericorde": {
+   "type": "weapon",
+   "scaling": [
+    "brutality",
+    "tactics"
+   ]
+  },
+  "Multiple-nocks Bow": {
+   "type": "weapon",
+   "scaling": [
+    "tactics"
+   ]
+  },
+  "Nutcracker": {
+   "type": "weapon",
+   "scaling": [
+    "survival"
+   ]
+  },
+  "Oil Grenade": {
+   "type": "skill",
+   "scaling": [
+    "brutality",
+    "tactics"
+   ]
+  },
+  "Oiled Sword": {
+   "type": "weapon",
+   "scaling": [
+    "brutality"
+   ]
+  },
+  "Parry Shield": {
+   "type": "weapon",
+   "scaling": [
+    "tactics",
+    "survival"
+   ]
+  },
+  "Phaser": {
+   "type": "skill",
+   "scaling": [
+    "brutality",
+    "tactics"
+   ]
+  },
+  "Powerful Grenade": {
+   "type": "skill",
+   "scaling": [
+    "brutality",
+    "survival"
+   ]
+  },
+  "Punishment": {
+   "type": "weapon",
+   "scaling": [
+    "survival"
+   ]
+  },
+  "Pyrotechnics": {
+   "type": "weapon",
+   "scaling": [
+    "brutality",
+    "tactics"
+   ]
+  },
+  "Quick Bow": {
+   "type": "weapon",
+   "scaling": [
+    "tactics"
+   ]
+  },
+  "Rampart": {
+   "type": "weapon",
+   "scaling": [
+    "survival"
+   ]
+  },
+  "Repeater Crossbow": {
+   "type": "weapon",
+   "scaling": [
+    "tactics",
+    "survival"
+   ]
+  },
+  "Root Grenade": {
+   "type": "skill",
+   "scaling": [
+    "survival"
+   ]
+  },
+  "Sadist's Stiletto": {
+   "type": "weapon",
+   "scaling": [
+    "brutality",
+    "tactics"
+   ]
+  },
+  "Scavenged Bombard": {
+   "type": "skill",
+   "scaling": [
+    "tactics",
+    "survival"
+   ]
+  },
+  "Shovel": {
+   "type": "weapon",
+   "scaling": [
+    "brutality",
+    "survival"
+   ]
+  },
+  "Sinew Slicer": {
+   "type": "skill",
+   "scaling": [
+    "brutality",
+    "tactics"
+   ]
+  },
+  "Smoke Bomb": {
+   "type": "skill",
+   "scaling": [
+    "brutality",
+    "tactics"
+   ]
+  },
+  "Snake Fangs": {
+   "type": "weapon",
+   "scaling": [
+    "brutality",
+    "tactics"
+   ]
+  },
+  "Spiked Shield": {
+   "type": "weapon",
+   "scaling": [
+    "survival"
+   ]
+  },
+  "Spite Sword": {
+   "type": "weapon",
+   "scaling": [
+    "brutality"
+   ]
+  },
+  "Stun Grenade": {
+   "type": "skill",
+   "scaling": [
+    "survival"
+   ]
+  },
+  "Swift Sword": {
+   "type": "weapon",
+   "scaling": [
+    "brutality"
+   ]
+  },
+  "Symmetrical Lance": {
+   "type": "weapon",
+   "scaling": [
+    "survival"
+   ]
+  },
+  "Telluric Shock": {
+   "type": "skill",
+   "scaling": [
+    "brutality",
+    "survival"
+   ]
+  },
+  "Tesla Coil": {
+   "type": "skill",
+   "scaling": [
+    "tactics"
+   ]
+  },
+  "Throwing Knife": {
+   "type": "weapon",
+   "scaling": [
+    "brutality",
+    "tactics"
+   ]
+  },
+  "Thunder Shield": {
+   "type": "weapon",
+   "scaling": [
+    "tactics",
+    "survival"
+   ]
+  },
+  "Tonic": {
+   "type": "skill",
+   "scaling": [
+    "survival"
+   ]
+  },
+  "Torch": {
+   "type": "weapon",
+   "scaling": [
+    "brutality"
+   ]
+  },
+  "Vampire Killer": {
+   "type": "weapon",
+   "scaling": [
+    "brutality",
+    "tactics"
+   ]
+  },
+  "Vampirism": {
+   "type": "skill",
+   "scaling": [
+    "brutality",
+    "survival"
+   ]
+  },
+  "War Spear": {
+   "type": "weapon",
+   "scaling": [
+    "brutality",
+    "survival"
+   ]
+  },
+  "Wings of the Crow": {
+   "type": "skill",
+   "scaling": [
+    "tactics"
+   ]
+  },
+  "Wolf Trap": {
+   "type": "skill",
+   "scaling": [
+    "tactics",
+    "survival"
+   ]
+  }
+ },
+ "mutations": {
+  "Acceptance": "colorless",
+  "Acrobatipack": "tactics",
+  "Adrenaline": "brutality",
+  "Alienation": "colorless",
+  "Ammo": "colorless",
+  "Armadillopack": "survival",
+  "Barbed Tips": "tactics",
+  "Berserker": "survival",
+  "Blind Faith": "survival",
+  "Combo": "brutality",
+  "Counterattack": "survival",
+  "Crow's Foot": "tactics",
+  "Cursed Flask": "colorless",
+  "Damned Vigor": "colorless",
+  "Dead Inside": "colorless",
+  "Demonic Strength": "colorless",
+  "Disengagement": "colorless",
+  "Emergency Triage": "colorless",
+  "Extended Healing": "survival",
+  "Frenzy": "brutality",
+  "Frostbite": "colorless",
+  "Gastronomy": "survival",
+  "Get Rich Quick": "colorless",
+  "Gold Plating": "colorless",
+  "Heart of Ice": "survival",
+  "Hunter's Instinct": "tactics",
+  "Initiative": "brutality",
+  "Instinct of the Master of Arms": "colorless",
+  "Kill Rhythm": "survival",
+  "Killer Instinct": "brutality",
+  "Masochist": "colorless",
+  "Melee": "brutality",
+  "Midas' Blood": "colorless",
+  "Necromancy": "survival",
+  "Networking": "tactics",
+  "No Mercy": "colorless",
+  "Open Wounds": "brutality",
+  "Parting Gift": "tactics",
+  "Point Blank": "tactics",
+  "Porcupack": "brutality",
+  "Predator": "brutality",
+  "Ranger's Gear": "tactics",
+  "Recovery": "colorless",
+  "Ripper": "tactics",
+  "Scheme": "brutality",
+  "Soldier's Resistance": "survival",
+  "Spite": "survival",
+  "Support": "tactics",
+  "Tactical Retreat": "tactics",
+  "Tainted Flask": "brutality",
+  "Tranquility": "tactics",
+  "Velocity": "colorless",
+  "Vengeance": "brutality",
+  "What Doesn't Kill Me": "survival",
+  "Wish": "colorless",
+  "Ygdar Orus Li Ox": "colorless"
+ },
+ "builds": [
+  {
+   "id": "bleed",
+   "name": "Bleed",
+   "color": "brutality",
+   "weapons": [
+    "Blood Sword",
+    "Sadist's Stiletto",
+    "Hemorrhage",
+    "Throwing Knife"
+   ],
+   "skills": [
+    "Knife Dance",
+    "Cleaver",
+    "Sinew Slicer",
+    "Leghugger",
+    "Corrosive Cloud"
+   ],
+   "mutations": [
+    "Open Wounds",
+    "Combo",
+    "Killer Instinct"
+   ],
+   "affixes": [
+    "Bleed Damage (+60%)",
+    "Bleed on Hit"
+   ],
+   "playstyle": "Stack bleeding, then finish with a weapon that crits on bleeding targets (Sadist's Stiletto, Hemorrhage).",
+   "sources": [
+    "https://gameplay.tips/guides/6703-dead-cells.html",
+    "https://www.noobfeed.com/articles/dead-cells-guide-top-10-builds"
+   ],
+   "composed": false
+  },
+  {
+   "id": "fire-oil",
+   "name": "Fire / Oil",
+   "color": "brutality",
+   "weapons": [
+    "Oiled Sword",
+    "Torch",
+    "Vampire Killer",
+    "Fire Blast",
+    "Pyrotechnics",
+    "Firebrands"
+   ],
+   "skills": [
+    "Oil Grenade",
+    "Fire Grenade",
+    "Flamethrower Turret",
+    "Holy Water"
+   ],
+   "mutations": [
+    "Killer Instinct",
+    "Combo",
+    "Vengeance"
+   ],
+   "affixes": [
+    "Fire Damage (+40% on burning)",
+    "Blue Fire Damage (+100% on burning oil)",
+    "Oil on Use / Oil on Deploy"
+   ],
+   "playstyle": "Oil the enemies, set them on fire, then crit with weapons that crit on burning or oiled targets.",
+   "sources": [
+    "https://gameplay.tips/guides/6703-dead-cells.html"
+   ],
+   "composed": false
+  },
+  {
+   "id": "speed",
+   "name": "Speed",
+   "color": "brutality",
+   "weapons": [
+    "Swift Sword"
+   ],
+   "skills": [
+    "Vampirism",
+    "Lightspeed"
+   ],
+   "mutations": [
+    "Frenzy",
+    "Velocity",
+    "Get Rich Quick"
+   ],
+   "affixes": [],
+   "playstyle": "Chain kills to keep a speed buff up (Swift Sword crits while it lasts) and run between fights.",
+   "sources": [
+    "https://www.noobfeed.com/articles/dead-cells-guide-top-10-builds"
+   ],
+   "composed": false
+  },
+  {
+   "id": "backstab",
+   "name": "Backstab assassin",
+   "color": "brutality",
+   "weapons": [
+    "Assassin's Dagger",
+    "Meat Skewer"
+   ],
+   "skills": [
+    "Phaser",
+    "Smoke Bomb"
+   ],
+   "mutations": [
+    "Scheme",
+    "Predator",
+    "Initiative",
+    "Instinct of the Master of Arms"
+   ],
+   "affixes": [],
+   "playstyle": "Phaser behind the target, then a burst of critical hits from behind.",
+   "sources": [
+    "https://www.noobfeed.com/articles/dead-cells-guide-top-10-builds",
+    "https://gameplay.tips/guides/6703-dead-cells.html"
+   ],
+   "composed": false
+  },
+  {
+   "id": "spite",
+   "name": "Spite / Vengeance",
+   "color": "brutality",
+   "weapons": [
+    "Spite Sword",
+    "Front Line Shield",
+    "Bloodthirsty Shield"
+   ],
+   "skills": [
+    "Lacerating Aura"
+   ],
+   "mutations": [
+    "Vengeance",
+    "Instinct of the Master of Arms"
+   ],
+   "affixes": [],
+   "playstyle": "Take small hits on purpose to keep Spite Sword crits and Vengeance active.",
+   "sources": [
+    "https://gameplay.tips/guides/6703-dead-cells.html"
+   ],
+   "composed": false
+  },
+  {
+   "id": "curse",
+   "name": "Curse",
+   "color": "brutality",
+   "weapons": [
+    "Spite Sword",
+    "Misericorde",
+    "Anathema"
+   ],
+   "skills": [
+    "Indulgence"
+   ],
+   "mutations": [
+    "Demonic Strength",
+    "Cursed Flask",
+    "Damned Vigor"
+   ],
+   "affixes": [],
+   "playstyle": "Stay cursed on purpose for the damage bonuses; Indulgence purges curse on kills.",
+   "sources": [
+    "https://deadcells.wiki.gg/wiki/Cursed_Flask",
+    "https://deadcells.wiki.gg/wiki/Version_3.5"
+   ],
+   "composed": true
+  },
+  {
+   "id": "turrets",
+   "name": "Turrets",
+   "color": "tactics",
+   "weapons": [
+    "Alchemic Carbine",
+    "Parry Shield"
+   ],
+   "skills": [
+    "Heavy Turret",
+    "Double Crossb-o-matic",
+    "Barnacle",
+    "Tesla Coil",
+    "Flamethrower Turret",
+    "Sinew Slicer",
+    "Crusher",
+    "Scavenged Bombard"
+   ],
+   "mutations": [
+    "Support",
+    "Hunter's Instinct",
+    "Tranquility"
+   ],
+   "affixes": [],
+   "playstyle": "Deploy two turrets and fight next to them.",
+   "sources": [
+    "https://www.noobfeed.com/articles/dead-cells-guide-top-10-builds",
+    "https://gameplay.tips/guides/6703-dead-cells.html"
+   ],
+   "composed": false
+  },
+  {
+   "id": "bow",
+   "name": "Bow / arrows",
+   "color": "tactics",
+   "weapons": [
+    "Quick Bow",
+    "Multiple-nocks Bow",
+    "Marksman's Bow",
+    "Bow and Endless Quiver",
+    "Infantry Bow"
+   ],
+   "skills": [
+    "Wolf Trap",
+    "Grappling Hook"
+   ],
+   "mutations": [
+    "Barbed Tips",
+    "Ripper",
+    "Point Blank",
+    "Tranquility"
+   ],
+   "affixes": [],
+   "playstyle": "Stick arrows into enemies and rip them out; keep distance (Infantry Bow and Point Blank want close range instead).",
+   "sources": [
+    "https://www.noobfeed.com/articles/dead-cells-guide-top-10-builds"
+   ],
+   "composed": false
+  },
+  {
+   "id": "poison",
+   "name": "Poison",
+   "color": "tactics",
+   "weapons": [
+    "Alchemic Carbine",
+    "Hokuto's Bow",
+    "Blowgun",
+    "Snake Fangs"
+   ],
+   "skills": [
+    "Corrosive Cloud",
+    "Barnacle"
+   ],
+   "mutations": [
+    "Networking",
+    "Tranquility",
+    "Hunter's Instinct"
+   ],
+   "affixes": [
+    "Poison Damage (+80%)",
+    "Poison on Hit"
+   ],
+   "playstyle": "Keep poison and Hokuto's marks up from range.",
+   "sources": [
+    "https://www.noobfeed.com/articles/dead-cells-guide-top-10-builds"
+   ],
+   "composed": false
+  },
+  {
+   "id": "electric",
+   "name": "Electric",
+   "color": "tactics",
+   "weapons": [
+    "Lightning Bolt",
+    "Electric Whip",
+    "Thunder Shield"
+   ],
+   "skills": [
+    "Tesla Coil",
+    "Lightning Rods",
+    "Wings of the Crow",
+    "Magnetic Grenade"
+   ],
+   "mutations": [
+    "Support",
+    "Hunter's Instinct",
+    "Tranquility"
+   ],
+   "affixes": [
+    "Shock Damage (+40%)"
+   ],
+   "playstyle": "Shock zones and chained damage.",
+   "sources": [
+    "https://deadcells.wiki.gg/wiki/Stats"
+   ],
+   "composed": true
+  },
+  {
+   "id": "parry",
+   "name": "Parry / shield",
+   "color": "survival",
+   "weapons": [
+    "Punishment",
+    "Spiked Shield",
+    "Rampart",
+    "Ice Shield",
+    "Iron Staff",
+    "Alucard's Shield"
+   ],
+   "skills": [
+    "Cocoon",
+    "Tonic"
+   ],
+   "mutations": [
+    "Counterattack",
+    "Spite",
+    "Blind Faith",
+    "What Doesn't Kill Me"
+   ],
+   "affixes": [],
+   "playstyle": "Parry everything: damage and healing come from parries.",
+   "sources": [
+    "https://gameplay.tips/guides/6703-dead-cells.html"
+   ],
+   "composed": false
+  },
+  {
+   "id": "freeze-root",
+   "name": "Freeze / root control",
+   "color": "survival",
+   "weapons": [
+    "Nutcracker",
+    "Ice Bow",
+    "Frost Blast",
+    "Ice Crossbow",
+    "Repeater Crossbow",
+    "Baseball Bat"
+   ],
+   "skills": [
+    "Ice Grenade",
+    "Root Grenade",
+    "Stun Grenade",
+    "Ice Armor",
+    "Wolf Trap"
+   ],
+   "mutations": [
+    "Heart of Ice",
+    "Frostbite",
+    "Soldier's Resistance"
+   ],
+   "affixes": [
+    "Ice Damage (+175% on frozen)",
+    "Root Damage (+75%)",
+    "Stun Damage (+70%)"
+   ],
+   "playstyle": "Lock enemies down (freeze, root, stun), then crit with weapons that crit on immobilised targets.",
+   "sources": [
+    "https://www.noobfeed.com/articles/dead-cells-guide-top-10-builds",
+    "https://gameplay.tips/guides/6703-dead-cells.html"
+   ],
+   "composed": false
+  },
+  {
+   "id": "heavy",
+   "name": "Heavy melee / Giantkiller",
+   "color": "survival",
+   "weapons": [
+    "Broadsword",
+    "Symmetrical Lance",
+    "Giantkiller",
+    "War Spear",
+    "Flawless",
+    "Shovel"
+   ],
+   "skills": [
+    "Powerful Grenade",
+    "Telluric Shock",
+    "Tonic",
+    "Ice Armor"
+   ],
+   "mutations": [
+    "Necromancy",
+    "Berserker",
+    "Soldier's Resistance",
+    "Kill Rhythm"
+   ],
+   "affixes": [],
+   "playstyle": "Tank hits and land slow, heavy critical hits (Giantkiller crits on elites and bosses).",
+   "sources": [
+    "https://www.noobfeed.com/articles/dead-cells-guide-top-10-builds",
+    "https://gameplay.tips/guides/6703-dead-cells.html"
+   ],
+   "composed": false
+  }
+ ]
+}
