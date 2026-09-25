@@ -1,0 +1,14 @@
+# Training environment (.venv-train), separate from the project's .venv.
+# Versions used on 2026-09-25 (Windows 10, RTX 5060 Ti 16 GB, driver 595.97, CUDA 12.8 wheels).
+# torch comes from the PyTorch index, not PyPI; see docs/training.md for the install commands.
+# transformers is pinned to the version that wrote the Spark checkpoint (config.json).
+transformers==4.57.1
+peft==0.21.0
+bitsandbytes==0.50.2
+accelerate==1.15.0
+safetensors==0.8.0
+tokenizers==0.22.2
+pyarrow==25.0.1
+numpy==2.5.3
+jinja2==3.1.6
+pydantic==2.13.5
