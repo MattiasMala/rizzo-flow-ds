@@ -258,11 +258,11 @@ def cmd_nav(args):
 
 
 def cmd_bridge(args):
-    from .bridge import BridgeReader
+    from .bridge import DEFAULT_NAME, BridgeReader
     from .decide import combat_request, post
     from .world import Navigator
 
-    reader = BridgeReader(args.name)
+    reader = BridgeReader(args.name or DEFAULT_NAME)
     nav = Navigator(limit=args.limit, replan_every=args.replan)
     target = args.target if args.target != "none" else None
     pool = ThreadPoolExecutor(max_workers=1)
@@ -463,7 +463,7 @@ def main(argv=None):
     p.set_defaults(func=cmd_nav)
 
     p = sub.add_parser("bridge", help="read the game state from the mod's shared memory")
-    p.add_argument("--name", default="Local\\RizzoDeadCells", help="mapping name or file path")
+    p.add_argument("--name", help="mapping name or file path (default: per platform)")
     p.add_argument("--target", default="exit", help="entity type to reach, or none")
     p.add_argument("--frames", type=int, default=0)
     p.add_argument("--limit", type=int, default=6)

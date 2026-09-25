@@ -169,7 +169,7 @@ di Dead Cells (nemici, oggetti, stanze, percorso) con la latenza minima. Pacchet
 `training/` (ambiente proprio, `deadcells/requirements.txt`: numpy, OpenCV, mss/dxcam,
 onnxruntime da scegliere), documentazione in `docs/deadcells.md`. Si lancia da `deadcells/`:
 `python -m deadcells builds|layout|describe|live|bench|calibrate|learn-digits|collect|nav|bridge|bench-nav|probe`; test con
-`python -m pytest -q deadcells/tests` (55, dati sintetici; `test_builds`/`decide` validano le
+`python -m pytest -q deadcells/tests` (58, dati sintetici; `test_builds`/`decide` validano le
 richieste contro `rizzo_flow.schema`). Il `pytest` del progetto non li raccoglie.
 Cattura → HUD (maschere `cv2.inRange`, cifre per template) → minimappa (celle, BFS per
 dilatazioni, cache se la griglia non cambia) → YOLO ONNX (non addestrato) → tracker → JSON con
@@ -198,6 +198,11 @@ solo HTTPS via proxy, porta 22 chiusa). Ciclo remoto via git: `python -m deadcel
 (gioco aperto) scrive `deadcells/probes/<data-ora>/` (`report.json`, `screen.png`, `types.txt`
 = classi/campi del bytecode HashLink filtrati per parola chiave, con `crashlink`), l'utente fa
 commit e push, la sessione cloud fa pull. Ogni passo del probe registra il proprio errore.
+**Il PC dell'utente è Arch Linux** ("parti per arch" = Arch, non "architettura"): memoria via
+`/proc/<pid>/mem` (`LinuxProcessMemory`, nativo e Proton; `ptrace_scope` 1 di default), ponte in
+`/dev/shm/RizzoDeadCells`, `find_window` con `xdotool` (X11), niente dxcam, `mss` non va su
+Wayland nativo (probe: screenshot con grim/spectacle/gnome-screenshot). Il Core Modding API è
+solo Windows: con la build nativa la strada è la lettura esterna guidata da `types.txt`.
 
 ### Sito del progetto (GitHub Pages)
 

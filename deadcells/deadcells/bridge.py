@@ -40,7 +40,9 @@ HEADER = struct.Struct("<4sHHIIdIHHHHIII16x")
 HERO = struct.Struct("<4f6iI4Bi12x")
 ENTITY = struct.Struct("<IHH4f2i")
 HERO_OFFSET = 64
-DEFAULT_NAME = "Local\\RizzoDeadCells"
+# Windows: named mapping. Linux: a file in shared memory (a mod under Proton can map it as
+# Z:\dev\shm\RizzoDeadCells).
+DEFAULT_NAME = "Local\\RizzoDeadCells" if sys.platform == "win32" else "/dev/shm/RizzoDeadCells"
 
 KINDS = (
     "unknown",

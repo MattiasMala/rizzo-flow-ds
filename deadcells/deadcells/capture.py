@@ -2,13 +2,17 @@
 
 - `DxcamSource` (Windows): DXGI Desktop Duplication, frames straight from the GPU compositor;
   the lowest-latency option (a new frame is available as soon as the game presents it).
-- `MssSource`: portable screenshot of a screen region (Windows, Linux X11, macOS); slower.
+- `MssSource`: portable screenshot of a screen region (Windows, Linux X11/XWayland, macOS);
+  slower. Native Wayland sessions do not allow it (only through the screencast portal).
 - `FileSource`: images from disk, for offline tests and calibration.
 
 `LatestFrame` runs a source on its own thread and keeps only the newest frame, so processing
 never works on a stale queue: if analysis is slower than the game, old frames are dropped.
 """
 
+import os
+import shutil
+import subprocess
 import sys
 import threading
 import time
@@ -20,9 +24,34 @@ Region = tuple[int, int, int, int]  # left, top, right, bottom in screen pixels
 
 
 def find_window(title: str = "Dead Cells") -> Region | None:
-    """Client area of the game window on Windows (None elsewhere or when it is not open)."""
-    if sys.platform != "win32":
-        return None
+    """Client area of the game window: Win32 on Windows, xdotool on X11 (also XWayland
+    windows); None on native Wayland or when the window is not open."""
+    if sys.platform == "win32":
+        return _find_window_win32(title)
+    if sys.platform.startswith("linux") and os.environ.get("DISPLAY") and shutil.which("xdotool"):
+        run = subprocess.run(
+            [
+                "xdotool",
+                "search",
+                "--onlyvisible",
+                "--name",
+                f"^{title}$",
+                "getwindowgeometry",
+                "--shell",
+            ],
+            capture_output=True,
+            check=False,
+            text=True,
+            timeout=5,
+        )
+        values = dict(line.split("=", 1) for line in run.stdout.splitlines() if "=" in line)
+        if {"X", "Y", "WIDTH", "HEIGHT"} <= values.keys():
+            x, y, w, h = (int(values[k]) for k in ("X", "Y", "WIDTH", "HEIGHT"))
+            return x, y, x + w, y + h
+    return None
+
+
+def _find_window_win32(title: str) -> Region | None:
     import ctypes
     from ctypes import wintypes
 

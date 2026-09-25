@@ -11,13 +11,21 @@ offset but the last read the pointer at `pointer + offset`; `pointer + last offs
 value's address (no offsets: the value sits at `module + base`).
 Haxe `Float` is a 64-bit double (`f64`), `Int` a 32-bit integer (`i32`).
 
-Spec file (JSON), none known yet for Dead Cells:
+On Linux the same code reads `/proc/<pid>/mem` and finds module bases in `/proc/<pid>/maps`,
+which covers both the native build and the Windows build under Proton (the PE modules of a
+Wine process are mapped files too). Arch's default `kernel.yama.ptrace_scope = 1` only lets a
+process read its own children: either launch the game from the reader, or allow it until the
+next reboot with `sudo sysctl kernel.yama.ptrace_scope=0`.
 
-    {"process": "deadcells.exe",
-     "fields": {"hero_x": {"module": "libhl.dll", "base": "0x0", "offsets": ["0x0"], "type": "f64"}}}
+Spec file (JSON), none known yet for Dead Cells ("process" may be omitted: then `deadcells`
+and `deadcells.exe` are both tried):
+
+    {"process": "deadcells",
+     "fields": {"hero_x": {"module": "libhl.so", "base": "0x0", "offsets": ["0x0"], "type": "f64"}}}
 """
 
 import json
+import os
 import struct
 import sys
 from dataclasses import dataclass
@@ -77,12 +85,97 @@ class Chain:
         return struct.unpack(fmt, memory.read(self.address(memory), struct.calcsize(fmt)))[0]
 
 
-class ProcessMemory:
-    """ReadProcessMemory on a running process (Windows only)."""
+GAME_PROCESSES = ("deadcells", "deadcells.exe")
+
+
+def basename(path: str) -> str:
+    return path.replace("\\", "/").rsplit("/", 1)[-1].lower()
+
+
+def find_linux_process(names=GAME_PROCESSES) -> tuple[int, str]:
+    """(pid, how it runs) of the first process whose executable or argv[0] matches a name."""
+    wanted = {n.lower() for n in names}
+    for entry in sorted(Path("/proc").iterdir(), key=lambda p: p.name):
+        if not entry.name.isdigit():
+            continue
+        try:
+            argv = (entry / "cmdline").read_bytes().split(b"\0")
+            exe = os.readlink(entry / "exe") if (entry / "exe").exists() else ""
+        except OSError:
+            continue
+        first = basename(argv[0].decode(errors="replace")) if argv and argv[0] else ""
+        if first in wanted or basename(exe) in wanted:
+            proton = first.endswith(".exe") or "wine" in basename(exe)
+            return int(entry.name), "proton" if proton else "native"
+    raise LookupError(f"None of {sorted(wanted)} is running")
+
+
+class LinuxProcessMemory:
+    """/proc/<pid>/mem reads with pread: native Linux builds and Proton alike."""
+
+    def __init__(self, process: str | None = None, pid: int | None = None):
+        self.pid = (
+            pid
+            if pid is not None
+            else find_linux_process((process,) if process else GAME_PROCESSES)[0]
+        )
+        try:
+            self.fd = os.open(f"/proc/{self.pid}/mem", os.O_RDONLY)
+        except PermissionError as exc:
+            raise PermissionError(f"Cannot read process {self.pid}: {ptrace_hint()}") from exc
+        self._modules: dict[str, int] | None = None
+
+    def module_base(self, name: str) -> int:
+        if self._modules is None:
+            self._modules = {}
+            with open(f"/proc/{self.pid}/maps", encoding="utf-8", errors="replace") as f:
+                for line in f:
+                    parts = line.split(maxsplit=5)
+                    if len(parts) == 6:
+                        start = int(parts[0].split("-")[0], 16)
+                        key = basename(parts[5].strip())
+                        self._modules[key] = min(start, self._modules.get(key, start))
+        return self._modules[name.lower()]
+
+    def read(self, address: int, size: int) -> bytes:
+        try:
+            data = os.pread(self.fd, size, address)
+        except PermissionError as exc:
+            raise PermissionError(f"Cannot read process {self.pid}: {ptrace_hint()}") from exc
+        if len(data) != size:
+            raise OSError(f"Short read at {address:#x}")
+        return data
+
+    def close(self) -> None:
+        os.close(self.fd)
+
+
+def ptrace_hint() -> str:
+    try:
+        scope = Path("/proc/sys/kernel/yama/ptrace_scope").read_text().strip()
+    except OSError:
+        return "no permission"
+    if scope == "0":
+        return "ptrace_scope is 0; run as the same user as the game"
+    return (
+        f"kernel.yama.ptrace_scope = {scope}: launch the game from the reader, or run "
+        "`sudo sysctl kernel.yama.ptrace_scope=0` (until reboot)"
+    )
+
+
+def open_process(process: str | None = None):
+    """Memory of the running game: /proc on Linux, ReadProcessMemory on Windows."""
+    return (
+        WindowsProcessMemory(process or "deadcells.exe")
+        if sys.platform == "win32"
+        else LinuxProcessMemory(process)
+    )
+
+
+class WindowsProcessMemory:
+    """ReadProcessMemory on a running process."""
 
     def __init__(self, process: str = "deadcells.exe"):
-        if sys.platform != "win32":
-            raise OSError("Reading another process's memory is implemented for Windows only")
         import ctypes
         from ctypes import wintypes
 
@@ -155,7 +248,7 @@ class MemorySource:
     @classmethod
     def from_file(cls, path: str | Path, memory: Memory | None = None) -> "MemorySource":
         spec = json.loads(Path(path).read_text(encoding="utf-8"))
-        return cls(spec, memory or ProcessMemory(spec.get("process", "deadcells.exe")))
+        return cls(spec, memory or open_process(spec.get("process")))
 
     def read(self) -> dict[str, float | int | None]:
         result = {}

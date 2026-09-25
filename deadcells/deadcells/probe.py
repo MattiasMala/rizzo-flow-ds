@@ -9,6 +9,7 @@ it. Every step is independent and reports its own error instead of stopping the 
 
 import hashlib
 import json
+import os
 import platform
 import re
 import shutil
@@ -95,10 +96,32 @@ def steam_libraries() -> list[Path]:
     return list(dict.fromkeys(libraries))
 
 
+def steam_app(libraries: list[Path]) -> dict | None:
+    """Dead Cells' Steam app id and folder from the app manifests (robust to renamed folders)."""
+    for library in libraries:
+        for manifest in sorted((library / "steamapps").glob("appmanifest_*.acf")):
+            text = manifest.read_text(encoding="utf-8", errors="replace")
+            name = re.search(r'"name"\s+"(.+?)"', text)
+            if name and name.group(1) == GAME_DIR:
+                appid = re.search(r'"appid"\s+"(\d+)"', text).group(1)
+                folder = re.search(r'"installdir"\s+"(.+?)"', text).group(1)
+                return {
+                    "appid": appid,
+                    "library": library,
+                    "root": library / "steamapps" / "common" / folder,
+                    "proton_prefix": library / "steamapps" / "compatdata" / appid,
+                }
+    return None
+
+
 def find_game(explicit: str | None) -> Path | None:
     if explicit:
         return Path(explicit)
-    for library in steam_libraries():
+    libraries = steam_libraries()
+    app = steam_app(libraries)
+    if app and app["root"].exists():
+        return app["root"]
+    for library in libraries:
         candidate = library / "steamapps" / "common" / GAME_DIR
         if candidate.exists():
             return candidate
@@ -115,15 +138,35 @@ def sha256(path: Path) -> str:
 
 def game_files(root: Path) -> dict:
     files = {}
-    for name in ("hlboot.dat", "deadcells.exe", "deadcells_gl.exe", "libhl.dll", "res.pak"):
+    names = (
+        "hlboot.dat",
+        "deadcells",
+        "deadcells.exe",
+        "deadcells_gl.exe",
+        "libhl.so",
+        "libhl.dll",
+        "res.pak",
+    )
+    for name in names:
         path = root / name
-        if path.exists():
+        if path.is_file():
+            with open(path, "rb") as f:
+                magic = f.read(4)
             files[name] = {
                 "bytes": path.stat().st_size,
+                "format": "ELF" if magic == b"\x7fELF" else "PE" if magic[:2] == b"MZ" else None,
                 "sha256": sha256(path) if path.stat().st_size < 512 << 20 else None,
             }
+    app = steam_app(steam_libraries())
     return {
         "root": str(root),
+        "build": "linux-native"
+        if "deadcells" in files
+        else "windows (Proton)"
+        if "deadcells.exe" in files
+        else "unknown",
+        "steam_appid": app and app["appid"],
+        "proton_prefix_exists": bool(app and app["proton_prefix"].exists()),
         "files": files,
         "top_level": sorted(p.name for p in root.iterdir())[:80],
         "core_modding_installed": (root / "coremod").exists(),
@@ -166,15 +209,24 @@ def capture(folder: Path, frames: int = 60) -> dict:
     from .capture import find_window, open_source
 
     region = find_window()
-    source = open_source("auto", region, 60)
-    times, frame = [], None
     try:
-        for _ in range(frames):
-            t = time.perf_counter()
-            frame, _ = source.grab()
-            times.append((time.perf_counter() - t) * 1000)
-    finally:
-        source.close()
+        source = open_source("auto", region, 60)
+        times, frame = [], None
+        try:
+            for _ in range(frames):
+                t = time.perf_counter()
+                frame, _ = source.grab()
+                times.append((time.perf_counter() - t) * 1000)
+        finally:
+            source.close()
+    except Exception as exc:  # noqa: BLE001 - e.g. mss on native Wayland: keep a screenshot
+        tool = screenshot_fallback(folder / "screen.png")
+        return {
+            "window": region,
+            "live_capture_error": f"{type(exc).__name__}: {exc}",
+            "screenshot": "screen.png" if tool else None,
+            "screenshot_tool": tool,
+        }
     cv2.imwrite(str(folder / "screen.png"), frame)
     ordered = sorted(times)
     return {
@@ -184,6 +236,72 @@ def capture(folder: Path, frames: int = 60) -> dict:
         "grab_ms_p50": round(ordered[len(ordered) // 2], 2),
         "grab_ms_p95": round(ordered[int(0.95 * (len(ordered) - 1))], 2),
     }
+
+
+def screenshot_fallback(out: Path) -> str | None:
+    """A still screenshot with the desktop's own tool (slow, but works on Wayland)."""
+    commands = {
+        "grim": ["grim", str(out)],  # wlroots: Sway, Hyprland
+        "spectacle": ["spectacle", "-b", "-n", "-f", "-o", str(out)],  # KDE
+        "gnome-screenshot": ["gnome-screenshot", "-f", str(out)],
+    }
+    for tool, command in commands.items():
+        if shutil.which(tool):
+            subprocess.run(command, capture_output=True, check=False, timeout=30)
+            if out.exists():
+                return tool
+    return None
+
+
+def linux() -> dict:
+    from .memory import LinuxProcessMemory, basename, find_linux_process, ptrace_hint
+
+    info = {
+        "session": os.environ.get("XDG_SESSION_TYPE"),
+        "desktop": os.environ.get("XDG_CURRENT_DESKTOP"),
+        "wayland_display": os.environ.get("WAYLAND_DISPLAY"),
+        "x_display": os.environ.get("DISPLAY"),
+        "tools": {
+            t: bool(shutil.which(t))
+            for t in ("xdotool", "grim", "spectacle", "gnome-screenshot", "scanmem", "gdb")
+        },
+        "dev_shm_writable": os.access("/dev/shm", os.W_OK),
+        "uinput_writable": os.access("/dev/uinput", os.W_OK),
+    }
+    try:
+        info["ptrace_scope"] = Path("/proc/sys/kernel/yama/ptrace_scope").read_text().strip()
+    except OSError:
+        info["ptrace_scope"] = None
+    try:
+        pid, mode = find_linux_process()
+    except LookupError as exc:
+        info["game_process"] = str(exc)
+        return info
+    argv = Path(f"/proc/{pid}/cmdline").read_bytes().split(b"\0")
+    info["game_process"] = {"pid": pid, "mode": mode, "argv0": argv[0].decode(errors="replace")}
+    maps = Path(f"/proc/{pid}/maps").read_text(errors="replace").splitlines()
+    mapped = sorted(
+        {basename(line.split(maxsplit=5)[5]) for line in maps if len(line.split(maxsplit=5)) == 6}
+    )
+    info["modules_of_interest"] = [
+        m
+        for m in mapped
+        if any(k in m for k in ("deadcells", "hl", "sdl", "openal", "fmt", "ui.", "mono", "dotnet"))
+    ]
+    info["modules_total"] = len(mapped)
+    try:
+        memory = LinuxProcessMemory(pid=pid)
+        main = next(m for m in info["modules_of_interest"] if m.startswith("deadcells"))
+        head = memory.read(memory.module_base(main), 4)
+        info["memory_read"] = {"ok": True, "module": main, "magic": head.hex()}
+        memory.close()
+    except Exception as exc:  # noqa: BLE001
+        info["memory_read"] = {
+            "ok": False,
+            "error": f"{type(exc).__name__}: {exc}",
+            "hint": ptrace_hint(),
+        }
+    return info
 
 
 def module(args: list[str], timeout: int = 300) -> dict:
@@ -236,6 +354,11 @@ def system() -> dict:
             text=True,
             timeout=20,
         ).stdout.strip()
+    if sys.platform.startswith("linux") and shutil.which("lspci"):
+        lines = subprocess.run(
+            ["lspci"], capture_output=True, check=False, text=True, timeout=20
+        ).stdout.splitlines()
+        info["gpus"] = [line for line in lines if "VGA" in line or "3D controller" in line]
     for package in ("numpy", "cv2", "scipy", "mss", "dxcam", "onnxruntime", "crashlink"):
         try:
             info[package] = getattr(__import__(package), "__version__", "installed")
@@ -247,8 +370,10 @@ def system() -> dict:
 def main(args) -> Path:
     folder = Path(args.out) / datetime.now().astimezone().strftime("%Y%m%d-%H%M%S")  # local time
     folder.mkdir(parents=True, exist_ok=False)
-    report: dict = {"probe_version": 1}
+    report: dict = {"probe_version": 2}
     step(report, "system")(system)
+    if sys.platform.startswith("linux"):
+        step(report, "linux")(linux)
     game = find_game(args.game)
     step(report, "game")(
         lambda: game_files(game) if game else {"error": "Dead Cells not found; pass --game PATH"}
