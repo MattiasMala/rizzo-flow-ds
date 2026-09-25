@@ -6,7 +6,7 @@ cadute, piattaforme e scale evitando i nemici, e lo trasforma in un JSON compatt
 Flow. Più la tabella delle build migliori con le domande al modello per scegliere armi,
 pergamene, mutazioni e bioma.
 
-> **Stato al 25 settembre 2026.** Codice e test (52) verificati **solo su dati sintetici** in un
+> **Stato al 25 settembre 2026.** Codice e test (55) verificati **solo su dati sintetici** in un
 > container Linux senza gioco. **Mai provato sul gioco vero.** Manca il mod che scrive lo stato
 > nella memoria condivisa (sezione A): il protocollo è fissato e provato, il lato gioco no.
 > La fisica del personaggio (altezza dei salti, velocità) è **stimata**, da misurare. Per la via
@@ -50,6 +50,27 @@ gioco + mod ──(ogni frame)──► memoria condivisa ──► BridgeReader
                                                         │
                                   JSON per il modello ──┴──► POST /v1/decisions (thread a parte)
 ```
+
+## Sviluppo da remoto (sessione cloud + PC del gioco)
+
+Lo sviluppo avviene in una sessione cloud che non vede il PC con il gioco (niente SSH: il
+container esce solo in HTTPS tramite proxy). Il ciclo passa da git:
+
+1. la sessione cloud scrive codice e fa push sulla branch;
+2. sul PC: `git pull`, poi, con il gioco aperto in finestra,
+   `python -m deadcells probe` (dalla cartella `deadcells/`);
+3. il probe scrive `probes/<data-ora>/` con `report.json` (sistema, GPU, cartella del gioco e
+   hash dei file, Core Modding installato o no, tempi di cattura, stato del ponte, benchmark),
+   `screen.png` (uno screenshot, per calibrare) e `types.txt` (classi, campi e metodi del
+   bytecode HashLink del gioco che contengono parole come hero, level, entity, mob, collision:
+   è da lì che si scrive il mod);
+4. sul PC: `git add probes/... && git commit && git push` (il comando lo stampa il probe);
+5. la sessione cloud fa pull e legge i risultati.
+
+Ogni passo del probe è indipendente: un errore (gioco chiuso, pacchetto mancante) finisce nel
+report senza fermare gli altri. `types.txt` richiede `crashlink` (in `requirements.txt`).
+Attenzione se il repository è pubblico: screenshot e nomi delle classi del gioco finiscono
+nella cronologia git.
 
 ## B. Pathfinding
 
@@ -173,7 +194,7 @@ Il gioco gira su Windows: l'ambiente va creato lì, separato dal `.venv` del pro
 cd deadcells
 uv venv .venv-dc && uv pip install --python .venv-dc -r requirements.txt
 uv pip install --python .venv-dc onnxruntime-directml   # oppure onnxruntime-gpu (NVIDIA) / onnxruntime
-.venv-dc/Scripts/python -m pytest -q tests              # 52 test, dati sintetici
+.venv-dc/Scripts/python -m pytest -q tests              # 55 test, dati sintetici
 .venv-dc/Scripts/python -m deadcells bench-nav          # pathfinding e ponte su questa macchina
 .venv-dc/Scripts/python -m deadcells bench              # latenza su questa macchina
 ```

@@ -10,3 +10,5 @@ mss>=10
 dxcam>=0.0.5; sys_platform == "win32"
 # Detector runtime, once a model is trained. Pick ONE of:
 #   onnxruntime-gpu (NVIDIA CUDA), onnxruntime-directml (Windows: AMD/Intel/NVIDIA), onnxruntime (CPU)
+# Probe: lists the game's HashLink classes (hlboot.dat) so a mod can be written remotely.
+crashlink==0.0.9

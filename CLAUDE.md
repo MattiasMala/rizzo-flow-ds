@@ -168,8 +168,8 @@ Richiesta dell'utente: albero/tabella delle build migliori e un programma che de
 di Dead Cells (nemici, oggetti, stanze, percorso) con la latenza minima. Pacchetto separato come
 `training/` (ambiente proprio, `deadcells/requirements.txt`: numpy, OpenCV, mss/dxcam,
 onnxruntime da scegliere), documentazione in `docs/deadcells.md`. Si lancia da `deadcells/`:
-`python -m deadcells builds|layout|describe|live|bench|calibrate|learn-digits|collect|nav|bridge|bench-nav`; test con
-`python -m pytest -q deadcells/tests` (52, dati sintetici; `test_builds`/`decide` validano le
+`python -m deadcells builds|layout|describe|live|bench|calibrate|learn-digits|collect|nav|bridge|bench-nav|probe`; test con
+`python -m pytest -q deadcells/tests` (55, dati sintetici; `test_builds`/`decide` validano le
 richieste contro `rizzo_flow.schema`). Il `pytest` del progetto non li raccoglie.
 Cattura → HUD (maschere `cv2.inRange`, cifre per template) → minimappa (celle, BFS per
 dilatazioni, cache se la griglia non cambia) → YOLO ONNX (non addestrato) → tracker → JSON con
@@ -192,7 +192,12 @@ del pericolo a finestra, campo di flusso ogni 6 frame. `Physics` = **stime** da 
 CLI `nav`, `bridge`, `bench-nav`. 52 test (tutte le ricerche = Dijkstra di riferimento).
 Richiesta dell'utente di installare Steam nel container con le sue credenziali: rifiutata
 (niente GPU/display, aggiornamenti del client bloccati dal proxy, credenziali in chat); le
-prove sul gioco vanno fatte con Claude in esecuzione sul PC dell'utente.
+prove sul gioco vanno fatte con Claude in esecuzione sul PC dell'utente. **L'utente però resta
+in sessioni cloud** (usa i crediti cloud; niente Claude locale, niente SSH: dal container esce
+solo HTTPS via proxy, porta 22 chiusa). Ciclo remoto via git: `python -m deadcells probe` sul PC
+(gioco aperto) scrive `deadcells/probes/<data-ora>/` (`report.json`, `screen.png`, `types.txt`
+= classi/campi del bytecode HashLink filtrati per parola chiave, con `crashlink`), l'utente fa
+commit e push, la sessione cloud fa pull. Ogni passo del probe registra il proprio errore.
 
 ### Sito del progetto (GitHub Pages)
 

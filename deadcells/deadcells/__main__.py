@@ -382,6 +382,16 @@ def cmd_bench_nav(args):
     )
 
 
+def cmd_probe(args):
+    from .probe import main as probe
+
+    folder = probe(args)
+    print(
+        f"Probe written to {folder}. Send it with:\n"
+        f'  git add {folder.as_posix()} && git commit -m "Probe {folder.name}" && git push'
+    )
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(prog="python -m deadcells")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -470,6 +480,14 @@ def main(argv=None):
     p.add_argument("--frames", type=int, default=300)
     p.add_argument("--seed", type=int, default=1)
     p.set_defaults(func=cmd_bench_nav)
+
+    p = sub.add_parser("probe", help="check-up of this PC and the game, for remote development")
+    p.add_argument("--game", help="Dead Cells folder (default: found through Steam)")
+    p.add_argument("--out", default="probes")
+    p.add_argument("--skip-types", action="store_true", help="do not list the game's classes")
+    p.add_argument("--skip-capture", action="store_true")
+    p.add_argument("--skip-bench", action="store_true")
+    p.set_defaults(func=cmd_probe)
 
     args = parser.parse_args(argv)
     args.func(args)
