@@ -168,8 +168,8 @@ Richiesta dell'utente: albero/tabella delle build migliori e un programma che de
 di Dead Cells (nemici, oggetti, stanze, percorso) con la latenza minima. Pacchetto separato come
 `training/` (ambiente proprio, `deadcells/requirements.txt`: numpy, OpenCV, mss/dxcam,
 onnxruntime da scegliere), documentazione in `docs/deadcells.md`. Si lancia da `deadcells/`:
-`python -m deadcells builds|layout|describe|live|bench|calibrate|learn-digits|collect`; test con
-`python -m pytest -q deadcells/tests` (28, frame sintetici; `test_builds`/`decide` validano le
+`python -m deadcells builds|layout|describe|live|bench|calibrate|learn-digits|collect|nav|bridge|bench-nav`; test con
+`python -m pytest -q deadcells/tests` (52, dati sintetici; `test_builds`/`decide` validano le
 richieste contro `rizzo_flow.schema`). Il `pytest` del progetto non li raccoglie.
 Cattura → HUD (maschere `cv2.inRange`, cifre per template) → minimappa (celle, BFS per
 dilatazioni, cache se la griglia non cambia) → YOLO ONNX (non addestrato) → tracker → JSON con
@@ -178,6 +178,21 @@ Build e scaling da `deadcells.wiki.gg` (tabelle Cargo, v3.5), build scelte dalla
 (fonti per build, due composte da noi: `composed: true`); grafo dei biomi con rune e BSC.
 **Mai provato sul gioco**: layout HUD/minimappa = ipotesi (`calibrated: false`), nessun
 rilevatore addestrato, nessuno strato di input. Latenza sintetica 2–3 ms senza rilevatore.
+
+**Architettura v2 (stessa data, richiesta dell'utente: dati dalla memoria, pathfinding).**
+Fonte preferita: `bridge.py`, blocco in memoria condivisa (`Local\RizzoDeadCells`, protocollo v1
+little-endian, seqlock, griglia ricopiata solo al cambio di `level_version`) scritto da un mod
+nel gioco (Dead Cells Core Modding API, C#, **non ancora scritto**); `BridgeWriter` è lo
+scrittore di riferimento. `memory.py`: catene di puntatori stile Cheat Engine con
+ReadProcessMemory (solo Windows, nessuna catena nota). `nav.py`: grafo di navigazione su tile
+(camminata, scale, drop da piattaforma, cadute, salti parabolici fino al doppio salto con
+larghezza del corpo; archi vettoriali con numpy), `path`/`flow_field` in C con scipy,
+`astar` Python di riferimento; `penalty` per nodo. `world.Navigator`: grafo per livello, mappa
+del pericolo a finestra, campo di flusso ogni 6 frame. `Physics` = **stime** da misurare.
+CLI `nav`, `bridge`, `bench-nav`. 52 test (tutte le ricerche = Dijkstra di riferimento).
+Richiesta dell'utente di installare Steam nel container con le sue credenziali: rifiutata
+(niente GPU/display, aggiornamenti del client bloccati dal proxy, credenziali in chat); le
+prove sul gioco vanno fatte con Claude in esecuzione sul PC dell'utente.
 
 ### Sito del progetto (GitHub Pages)
 

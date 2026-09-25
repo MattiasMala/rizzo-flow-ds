@@ -227,6 +227,161 @@ def cmd_collect(args):
         source.close()
 
 
+def cmd_nav(args):
+    import scipy.sparse.csgraph  # noqa: F401  (import time is not search time)
+
+    from .nav import NavGraph, Physics, parse_ascii
+
+    grid, marks = parse_ascii(Path(args.level).read_text(encoding="utf-8"))
+    for mark in ("S", "G"):
+        if mark not in marks:
+            sys.exit(f"The level needs an {mark} (start) and a G (goal)")
+    started = time.perf_counter()
+    graph = NavGraph(grid, Physics())
+    built = time.perf_counter()
+    start, goal = graph.node(*marks["S"][0]), graph.node(*marks["G"][0])
+    path = graph.path(start, goal)
+    done = time.perf_counter()
+    print(
+        json.dumps(
+            {
+                "nodes": len(graph.cells),
+                "edges": graph.edges,
+                "build_ms": round((built - started) * 1000, 1),
+                "search_ms": round((done - built) * 1000, 2),
+                "seconds": None if path is None else round(graph.path_cost(path), 3),
+                "actions": None if path is None else graph.actions(path),
+            },
+            indent=1,
+        )
+    )
+
+
+def cmd_bridge(args):
+    from .bridge import BridgeReader
+    from .decide import combat_request, post
+    from .world import Navigator
+
+    reader = BridgeReader(args.name)
+    nav = Navigator(limit=args.limit, replan_every=args.replan)
+    target = args.target if args.target != "none" else None
+    pool = ThreadPoolExecutor(max_workers=1)
+    pending, last, count = None, 0.0, 0
+    try:
+        while args.frames == 0 or count < args.frames:
+            snap = reader.read()
+            if snap is None:
+                time.sleep(0.0005)  # no new frame yet
+                continue
+            count += 1
+            line = {
+                "frame": snap.frame,
+                "state": nav.update(snap, target),
+                "timings_ms": dict(nav.timings_ms),
+            }
+            if pending is not None and pending.done():
+                answers = pending.result()["answers"]
+                line["decision"] = {k: a.get("choice", a.get("score")) for k, a in answers.items()}
+                pending = None
+            if args.decide and pending is None and time.monotonic() - last >= args.every:
+                last = time.monotonic()
+                pending = pool.submit(post, combat_request(line["state"]), args.decide)
+            if not args.quiet:
+                print(json.dumps(line, ensure_ascii=False), flush=True)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        pool.shutdown(wait=False, cancel_futures=True)
+        print(json.dumps({"torn_reads": reader.torn, "stale_reads": reader.stale}), file=sys.stderr)
+
+
+def cmd_bench_nav(args):
+    import statistics
+    import tempfile
+
+    import numpy as np
+
+    from . import synth
+    from .bridge import ENTITY_DTYPE, KINDS, BridgeReader, BridgeWriter, Hero
+    from .nav import NavGraph, Physics
+    from .world import Navigator
+
+    rows, cols = map(int, args.size.lower().split("x"))
+    grid = synth.level(args.seed, rows, cols, args.platforms)
+    t = time.perf_counter()
+    graph = NavGraph(grid, Physics())
+    build_ms = (time.perf_counter() - t) * 1000
+    rng = np.random.default_rng(args.seed)
+    standing = np.argwhere(graph.standable)
+    pairs = rng.integers(len(graph.cells), size=(50, 2))
+
+    def timed(fn, n):
+        values = []
+        for a, b in pairs[:n]:
+            t = time.perf_counter()
+            fn(int(a), int(b))
+            values.append((time.perf_counter() - t) * 1000)
+        return values
+
+    graph.path(0, 0)  # scipy import outside the measure
+    results = {
+        "astar_python_ms": timed(graph.astar, 20),
+        "path_scipy_ms": timed(graph.path, 50),
+        "flow_field_ms": timed(lambda a, b: graph.flow_field(b), 20),
+    }
+    exit_cell = standing[len(standing) // 2]
+
+    def entities(n):
+        e = np.zeros(n, ENTITY_DTYPE)
+        pick = standing[rng.integers(len(standing), size=n)]
+        e["kind"], e["x"], e["y"] = KINDS.index("enemy"), pick[:, 1] + 0.5, pick[:, 0] + 0.9
+        e["vx"] = rng.normal(0, 3, n)
+        e[0] = (1, KINDS.index("exit"), 0, exit_cell[1] + 0.5, exit_cell[0] + 0.9, 0, 0, 0, 0)
+        return e
+
+    start = standing[5]
+    hero = Hero(start[1] + 0.5, start[0] + 0.9, 0, 0, 80, 100, 2, 3, 10, 100, 1, 3, 1, 2, 0)
+    with tempfile.TemporaryDirectory() as tmp:
+        writer = BridgeWriter(Path(tmp) / "bench.bin", cols, rows, capacity=128)
+        writer.write(hero, entities(args.entities), 0.0, grid)
+        reader, nav = BridgeReader(Path(tmp) / "bench.bin"), Navigator()
+        nav.update(reader.read(), "exit")
+        reads, updates = [], []
+        for i in range(args.frames):
+            writer.write(hero, entities(args.entities), i / 60)
+            t = time.perf_counter()
+            snap = reader.read()
+            reads.append((time.perf_counter() - t) * 1000)
+            t = time.perf_counter()
+            nav.update(snap, "exit")
+            updates.append((time.perf_counter() - t) * 1000)
+        reader.close()
+        writer.close()
+    results["bridge_read_ms"], results["navigator_update_ms"] = reads, updates
+
+    def stats(values):
+        ordered = sorted(values)
+        return {
+            "p50": round(statistics.median(ordered), 3),
+            "p95": round(ordered[round(0.95 * (len(ordered) - 1))], 3),
+            "max": round(ordered[-1], 3),
+        }
+
+    print(
+        json.dumps(
+            {
+                "level": [rows, cols],
+                "nodes": len(graph.cells),
+                "edges": graph.edges,
+                "graph_build_ms": round(build_ms, 1),
+                "entities": args.entities,
+                **{k: stats(v) for k, v in results.items()},
+            },
+            indent=1,
+        )
+    )
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(prog="python -m deadcells")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -292,6 +447,29 @@ def main(argv=None):
     p.add_argument("--source", default="auto", choices=["auto", "dxcam", "mss"])
     p.add_argument("--window", default="Dead Cells")
     p.set_defaults(func=cmd_collect)
+
+    p = sub.add_parser("nav", help="path on an ASCII level (S start, G goal, # . = H ^)")
+    p.add_argument("level")
+    p.set_defaults(func=cmd_nav)
+
+    p = sub.add_parser("bridge", help="read the game state from the mod's shared memory")
+    p.add_argument("--name", default="Local\\RizzoDeadCells", help="mapping name or file path")
+    p.add_argument("--target", default="exit", help="entity type to reach, or none")
+    p.add_argument("--frames", type=int, default=0)
+    p.add_argument("--limit", type=int, default=6)
+    p.add_argument("--replan", type=int, default=6, help="frames between danger-aware replans")
+    p.add_argument("--decide", metavar="URL")
+    p.add_argument("--every", type=float, default=0.25)
+    p.add_argument("--quiet", action="store_true")
+    p.set_defaults(func=cmd_bridge)
+
+    p = sub.add_parser("bench-nav", help="pathfinding and bridge latency on a random level")
+    p.add_argument("--size", default="200x500", help="rows x cols")
+    p.add_argument("--platforms", type=int, default=1600)
+    p.add_argument("--entities", type=int, default=40)
+    p.add_argument("--frames", type=int, default=300)
+    p.add_argument("--seed", type=int, default=1)
+    p.set_defaults(func=cmd_bench_nav)
 
     args = parser.parse_args(argv)
     args.func(args)

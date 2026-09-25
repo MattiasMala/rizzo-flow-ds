@@ -1,17 +1,107 @@
-# Dead Cells: lettura dello schermo e albero delle build
+# Dead Cells: stato del gioco, pathfinding e albero delle build
 
-Cartella [`deadcells/`](../deadcells/): un programma che descrive in pochi millisecondi cosa c'è
-sullo schermo di Dead Cells (vita, fiaschette, cellule, oro, minimappa con percorsi, nemici e
-oggetti con posizione e velocità) in un JSON compatto che Rizzo Flow può leggere, più la tabella
-delle build migliori con le domande al modello per scegliere armi, pergamene, mutazioni e bioma.
+Cartella [`deadcells/`](../deadcells/): legge lo stato di Dead Cells (dalla memoria del gioco o,
+in mancanza, dallo schermo), calcola il percorso migliore sul livello con salti, doppi salti,
+cadute, piattaforme e scale evitando i nemici, e lo trasforma in un JSON compatto per Rizzo
+Flow. Più la tabella delle build migliori con le domande al modello per scegliere armi,
+pergamene, mutazioni e bioma.
 
-> **Stato al 25 settembre 2026.** Codice e test verificati **solo su frame sintetici** in un
-> container Linux senza gioco. **Mai provato sul gioco vero.** Le posizioni dell'HUD e i colori
-> della minimappa nel layout predefinito sono **ipotesi** da calibrare su uno screenshot (nessuna
-> fonte li documenta). Il rilevatore di nemici e oggetti **non è ancora addestrato**: senza un
-> modello, `threats`, `loot` e `places` restano vuoti. Nessun numero di qualità esiste ancora.
+> **Stato al 25 settembre 2026.** Codice e test (52) verificati **solo su dati sintetici** in un
+> container Linux senza gioco. **Mai provato sul gioco vero.** Manca il mod che scrive lo stato
+> nella memoria condivisa (sezione A): il protocollo è fissato e provato, il lato gioco no.
+> La fisica del personaggio (altezza dei salti, velocità) è **stimata**, da misurare. Per la via
+> schermo: layout dell'HUD da calibrare, rilevatore non addestrato.
 
-## Indice
+## A. Architettura v2: prima la memoria, poi lo schermo
+
+Tre fonti dello stato, dalla più veloce ed esatta alla più lenta:
+
+| Fonte | Latenza misurata | Esattezza | Cosa serve |
+| --- | --- | --- | --- |
+| **Ponte in memoria condivisa** (`bridge.py`) | lettura 0.014 / 0.024 ms (p50/p95) | coordinate esatte di eroe, nemici, oggetti e **griglia di collisione del livello** | un mod dentro il gioco che scrive il blocco a ogni frame (da scrivere) |
+| Lettura esterna della memoria (`memory.py`) | una chiamata di sistema per salto di puntatore (µs) | pochi valori (posizione, vita) | catene di puntatori trovate con Cheat Engine; possono rompersi a ogni aggiornamento |
+| Schermo (`capture.py` + `pipeline.py`) | 2–3 ms + cattura, più il rilevatore | approssimata; niente collisioni | calibrazione e un rilevatore addestrato |
+
+**Perché un mod.** Dead Cells gira su HashLink (bytecode in `hlboot.dat`); esistono strumenti
+della community per agganciare le funzioni del gioco:
+[Dead Cells Core Modding API](https://github.com/dead-cells-core-modding/core) (mod in C#, Windows
+x64, licenza MIT), [HLX](https://github.com/hlx-framework/hlx-core),
+[crashlink](https://n3rdl0rd.github.io/ModDocCE/tutorials/crashlink/). Un mod legge gli oggetti
+del gioco direttamente e li copia nel blocco condiviso: nessuna visione, nessuna catena di
+puntatori fragile, e soprattutto la **mappa delle collisioni**, senza la quale il pathfinding
+vero non si può fare (la minimappa mostra le stanze, non dove si può saltare).
+
+**Protocollo v1** (little-endian, dettagli in `bridge.py`): intestazione di 64 byte (`RZDC`,
+versione, `seq`, frame, tempo di gioco, `level_version`, dimensioni, offset), eroe (64 byte:
+posizione e velocità in tile, vita, fiaschette, cellule, oro, flag, statistiche, maledizione),
+entità (32 byte: id, tipo, flag elite/boss/ostile/attacca, posizione, velocità, vita), griglia
+del livello (un byte per tile: vuoto, solido, piattaforma, scala, pericolo). Coerenza con un
+*seqlock*: lo scrittore rende `seq` dispari, scrive, lo rende pari; il lettore riprova se lo
+trova dispari o cambiato. La griglia si ricopia solo quando cambia `level_version`. Nome del
+blocco su Windows: `Local\RizzoDeadCells`.
+
+```
+gioco + mod ──(ogni frame)──► memoria condivisa ──► BridgeReader (0.02 ms)
+                                                        │
+                            livello nuovo? ──► NavGraph (grafo, ~0.5 s una volta per livello)
+                                                        │
+                    nemici ► mappa del pericolo ► campo di flusso verso l'obiettivo (4–5 ms,
+                                                  ogni 6 frame) ► mossa successiva (lookup)
+                                                        │
+                                  JSON per il modello ──┴──► POST /v1/decisions (thread a parte)
+```
+
+## B. Pathfinding
+
+`nav.py`, per giochi a piattaforme su griglia di tile (riga 0 in alto):
+
+- **Nodi**: celle dove il personaggio sta in piedi (pavimento o piattaforma sotto, corpo di
+  `body_height` tile libero) o si aggrappa (scale, liane; la cima di una scala è un pavimento).
+- **Archi**, generati per tutti i nodi insieme con numpy: camminare, arrampicarsi, lasciarsi
+  cadere da una piattaforma attraversabile, scendere da una sporgenza, **saltare**. I salti sono
+  archi parabolici per ogni altezza fino al doppio salto e ogni distanza raggiungibile con la
+  velocità in aria, controllati colonna per colonna con la larghezza del corpo: il primo
+  pavimento incontrato in discesa è l'atterraggio (come nel gioco), i soffitti bloccano l'arco,
+  si può afferrare una scala al volo, un arco ancora in aria all'altezza di partenza prosegue in
+  caduta verticale. Teletrasporti e altri collegamenti si passano come `links`.
+- **Costi in secondi** (camminata, tempo di volo, tempo di caduta con velocità massima, un
+  piccolo costo per ogni pressione di salto) più un costo per ogni cella di pericolo (spine).
+- **Ricerche**: `path` (Dijkstra in C con `scipy.sparse.csgraph`), `flow_field` (Dijkstra
+  all'indietro dall'obiettivo: tempo e prossimo arco da **ogni** nodo, così a ogni frame la
+  mossa è una lettura di tabella), `astar` (Python, riferimento). Una `penalty` per nodo (la
+  mappa del pericolo attorno a nemici, proiettili e trappole) sposta il percorso senza
+  ricostruire il grafo; la struttura della matrice si calcola una volta per livello.
+- **Uscita**: azioni per uno strato di input (`walk right 9`, `jump dx 6 apex 5 double_jump`,
+  `drop`, `climb up 5`, `fall`, `link`).
+
+Verifiche (tutte su livelli sintetici): salto di un buco e buco troppo largo, muro che richiede
+il doppio salto (e irraggiungibile col solo salto singolo), soffitto che blocca, salita
+attraverso una piattaforma e discesa, scala fino in cima, lunga caduta, teletrasporto, pericoli
+aggirati, deviazione attorno a un nemico; su 5 livelli casuali con penalità casuali `astar`,
+`path` e i due `flow_field` (C e Python) danno esattamente il costo di un Dijkstra di
+riferimento. Correzioni emerse dai test: l'altezza dei piedi va arrotondata per difetto (un
+apice di 5.5 tile non raggiunge una sporgenza a 6) e il corpo ha una larghezza (altrimenti
+l'arco "sfiora" i soffitti).
+
+**Latenza** (`python -m deadcells bench-nav`, livello casuale 200×500 tile, 11.161 nodi,
+112.175 archi, 40 entità, CPU del container: Xeon 2.8 GHz, 4 core), ms:
+
+| | p50 | p95 |
+| --- | ---: | ---: |
+| Costruzione del grafo (una volta per livello) | 556 | — |
+| `astar` in Python (riferimento) | 55 | 102 |
+| `path` (scipy, C) | 3.5 | 5.1 |
+| `flow_field` (scipy, C) | 4.2 | 5.2 |
+| Lettura del ponte | 0.014 | 0.024 |
+| `Navigator.update` (lettura esclusa; ripianifica ogni 6 frame) | 0.74 | 8.1 |
+
+**Fisica stimata.** `Physics` (velocità di corsa 9 tile/s, salto 3 tile, doppio salto 5.5,
+gravità 80 tile/s², corpo 2 tile) è una stima, non una misura: col ponte attivo si misura dal
+movimento dell'eroe (posizione nel tempo durante un salto) e si passano i valori veri. Non
+modellati: aggrappo alle sporgenze (il gioco lo fa: il grafo è quindi prudente), rotolata,
+attacco in picchiata, muri distruttibili, porte chiuse.
+
+## Indice (via schermo e build)
 
 1. [Come funziona](#1-come-funziona)
 2. [Latenza](#2-latenza)
@@ -83,7 +173,8 @@ Il gioco gira su Windows: l'ambiente va creato lì, separato dal `.venv` del pro
 cd deadcells
 uv venv .venv-dc && uv pip install --python .venv-dc -r requirements.txt
 uv pip install --python .venv-dc onnxruntime-directml   # oppure onnxruntime-gpu (NVIDIA) / onnxruntime
-.venv-dc/Scripts/python -m pytest -q tests              # 28 test, frame sintetici
+.venv-dc/Scripts/python -m pytest -q tests              # 52 test, dati sintetici
+.venv-dc/Scripts/python -m deadcells bench-nav          # pathfinding e ponte su questa macchina
 .venv-dc/Scripts/python -m deadcells bench              # latenza su questa macchina
 ```
 
@@ -275,8 +366,13 @@ bioma normale) non è nel grafo.
 
 ## 9. Limiti e prossimi passi
 
-- **Mai provato sul gioco.** Prima cosa da fare su Windows: screenshot, `calibrate`,
-  `learn-digits`, `bench`, poi `live` e controllo a occhio del JSON.
+- **Mai provato sul gioco.** Prima cosa da fare su Windows, con Claude in esecuzione sul PC
+  del gioco: installare il Core Modding API, scrivere il mod che riempie il ponte (trovare nel
+  codice del gioco eroe, entità e griglia di collisione), `python -m deadcells bridge` e
+  controllo del JSON; poi misurare la fisica dell'eroe. Via schermo: screenshot, `calibrate`,
+  `learn-digits`, `bench`, `live`.
+- `python -m deadcells nav livello.txt` calcola il percorso su un livello ASCII (`S` partenza,
+  `G` obiettivo, `#` solido, `=` piattaforma, `H` scala, `^` pericolo).
 - Rilevatore da addestrare (sezione 5): senza, il modello non sa dove sono i nemici.
 - La minimappa descrive la mappa disegnata, non le collisioni reali (salti, piattaforme,
   passaggi a senso unico); le icone non documentate (uscite, forzieri, pergamene) vanno

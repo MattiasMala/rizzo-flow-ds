@@ -76,3 +76,19 @@ def frame(
     for name, box in objects or []:
         fill(image, box, colors[name].rgb)
     return image
+
+
+def level(seed: int = 1, rows: int = 200, cols: int = 500, platforms: int = 1600) -> np.ndarray:
+    """Random tile level (walls around, solid and one-way platforms, ladders) for benchmarks."""
+    from .nav import LADDER, PLATFORM, SOLID
+
+    rng = np.random.default_rng(seed)
+    grid = np.zeros((rows, cols), np.uint8)
+    grid[-1] = grid[0] = grid[:, 0] = grid[:, -1] = SOLID
+    for _ in range(platforms):
+        r, c, w = rng.integers(3, rows - 1), rng.integers(1, cols - 10), rng.integers(3, 14)
+        grid[r, c : c + w] = rng.choice([SOLID, SOLID, PLATFORM])
+    for _ in range(platforms // 20):
+        c, r = rng.integers(1, cols - 1), rng.integers(5, rows - 8)
+        grid[r : r + 6, c] = LADDER
+    return grid

@@ -4,6 +4,7 @@ numpy==2.5.3
 opencv-python-headless==5.0.0.93
 pytest>=8.4
 pydantic>=2.11,<3
+scipy==1.18.1  # pathfinding: Dijkstra in C (nav.py falls back to pure Python without it)
 # Screen capture (not tested here: no game in the test container).
 mss>=10
 dxcam>=0.0.5; sys_platform == "win32"
