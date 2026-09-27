@@ -392,6 +392,34 @@ def cmd_probe(args):
     )
 
 
+def cmd_hl(args):
+    from .hashlink import HashLink
+    from .memory import LinuxProcessMemory
+
+    hl = HashLink(LinuxProcessMemory(pid=args.pid) if args.pid else LinuxProcessMemory())
+    cls = hl.find_class(args.cls)
+    found = hl.instances(cls, limit=args.limit)
+    if not args.watch:
+        out = {
+            **hl.describe_class(cls),
+            "instances": [f"{a:#x}" for a in found],
+            "dumps": [hl.dump(a) for a in found[: args.dump]],
+        }
+        print(json.dumps(out, indent=1, default=str))
+        return
+    if not found:
+        sys.exit(f"No live instance of {args.cls}")
+    fields = {f.name: f for f in cls.fields}
+    watched = [fields[name] for name in args.watch.split(",")]
+    obj, period = found[0], 1 / args.hz
+    start = time.perf_counter()
+    while time.perf_counter() - start < args.seconds:
+        t = time.perf_counter()
+        row = {"t": round(t - start, 4), **{f.name: hl.read_field(obj, f) for f in watched}}
+        print(json.dumps(row, default=str), flush=True)
+        time.sleep(max(0.0, period - (time.perf_counter() - t)))
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(prog="python -m deadcells")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -487,7 +515,18 @@ def main(argv=None):
     p.add_argument("--skip-types", action="store_true", help="do not list the game's classes")
     p.add_argument("--skip-capture", action="store_true")
     p.add_argument("--skip-bench", action="store_true")
+    p.add_argument("--skip-live", action="store_true", help="do not read the running game")
     p.set_defaults(func=cmd_probe)
+
+    p = sub.add_parser("hl", help="find a HashLink class in the running game and read objects")
+    p.add_argument("cls", metavar="CLASS", help="full class name, as in types.txt")
+    p.add_argument("--pid", type=int, help="process id (default: the running game)")
+    p.add_argument("--limit", type=int, default=50)
+    p.add_argument("--dump", type=int, default=3, help="instances to print in full")
+    p.add_argument("--watch", help="comma-separated fields of the first instance to sample")
+    p.add_argument("--hz", type=float, default=60)
+    p.add_argument("--seconds", type=float, default=5)
+    p.set_defaults(func=cmd_hl)
 
     args = parser.parse_args(argv)
     args.func(args)

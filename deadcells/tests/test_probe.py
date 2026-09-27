@@ -44,3 +44,26 @@ def test_type_dump_on_real_hashlink_bytecode(tmp_path):
     result = probe.dump_types(sample, tmp_path / "types.txt", keywords=("string",))
     text = (tmp_path / "types.txt").read_text(encoding="utf-8")
     assert result["classes_kept"] >= 1 and "class String" in text and "length: I32" in text
+
+
+def test_bytecode_is_extracted_from_the_executable(tmp_path):
+    pytest.importorskip("crashlink")
+    sample = (SAMPLES / "sample.hl").read_bytes()
+    exe = tmp_path / "deadcells.exe"
+    # PE-ish junk with a false "HLB" match first, then the bytecode and its padding.
+    exe.write_bytes(b"MZ" + b"\0" * 100 + b"HLB\x09junk" + sample + probe.PADDING * 4 + b"tail")
+    info = probe.extract_bytecode(exe, tmp_path / "cache" / "hlboot.dat")
+    assert (tmp_path / "cache" / "hlboot.dat").read_bytes() == sample
+    assert info["bytes"] == len(sample) and info["version"] == sample[3]
+    with pytest.raises(LookupError):
+        probe.extract_bytecode(
+            tmp_path / "cache" / "hlboot.dat.missing"
+            if False
+            else _write(tmp_path / "x.exe", b"MZ nothing"),
+            tmp_path / "out.dat",
+        )
+
+
+def _write(path, data):
+    path.write_bytes(data)
+    return path

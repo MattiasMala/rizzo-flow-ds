@@ -137,6 +137,22 @@ class LinuxProcessMemory:
                         self._modules[key] = min(start, self._modules.get(key, start))
         return self._modules[name.lower()]
 
+    def regions(self, writable: bool | None = None) -> list[tuple[int, int, str, str]]:
+        """Readable mappings as (start, end, perms, path); `writable` filters on the w bit."""
+        result = []
+        with open(f"/proc/{self.pid}/maps", encoding="utf-8", errors="replace") as f:
+            for line in f:
+                parts = line.split(maxsplit=5)
+                perms = parts[1]
+                if perms[0] != "r" or (writable is not None and (perms[1] == "w") != writable):
+                    continue
+                start, end = (int(v, 16) for v in parts[0].split("-"))
+                path = parts[5].strip() if len(parts) == 6 else ""
+                if path in ("[vvar]", "[vsyscall]", "[vvar_vclock]"):
+                    continue  # kernel pages that cannot be read through /proc/pid/mem
+                result.append((start, end, perms, path))
+        return result
+
     def read(self, address: int, size: int) -> bytes:
         try:
             data = os.pread(self.fd, size, address)

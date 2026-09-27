@@ -173,6 +173,42 @@ def game_files(root: Path) -> dict:
     }
 
 
+HLB = b"HLB"
+PADDING = b"XPADDINGPADDINGX"  # fills the rest of the bytecode block in deadcells.exe
+
+
+def extract_bytecode(exe: Path, out: Path) -> dict:
+    """The HashLink bytecode embedded in the Steam `deadcells.exe` (no hlboot.dat there):
+    from the "HLB" header that parses to the XPADDING filler (as alivecells does)."""
+    from crashlink import Bytecode
+
+    data = exe.read_bytes()
+    at = data.find(HLB)
+    while at != -1:
+        if 1 <= data[at + 3] <= 6:  # bytecode format version
+            end = data.find(PADDING, at)
+            blob = data[at : end if end != -1 else len(data)]
+            if _parses(Bytecode, blob):
+                out.parent.mkdir(parents=True, exist_ok=True)
+                out.write_bytes(blob)
+                return {
+                    "offset": at,
+                    "bytes": len(blob),
+                    "version": data[at + 3],
+                    "sha256": hashlib.sha256(blob).hexdigest(),
+                }
+        at = data.find(HLB, at + 1)
+    raise LookupError(f"No HashLink bytecode found in {exe.name}")
+
+
+def _parses(bytecode_cls, blob: bytes) -> bool:
+    try:
+        bytecode_cls.from_bytes(blob)
+    except Exception:  # noqa: BLE001 - not bytecode: the caller keeps looking
+        return False
+    return True
+
+
 def dump_types(hlboot: Path, out: Path, keywords=KEYWORDS) -> dict:
     """Class names, superclasses and own fields of the HashLink bytecode, filtered by keyword."""
     from crashlink import Bytecode, Obj
@@ -227,9 +263,16 @@ def capture(folder: Path, frames: int = 60) -> dict:
             "screenshot": "screen.png" if tool else None,
             "screenshot_tool": tool,
         }
-    cv2.imwrite(str(folder / "screen.png"), frame)
+    black = float(frame.mean()) < 2.0
+    tool = None
+    if black:  # e.g. XWayland on Hyprland: frames come back empty, the compositor has them
+        tool = screenshot_fallback(folder / "screen.png")
+    if not tool:
+        cv2.imwrite(str(folder / "screen.png"), frame)
     ordered = sorted(times)
     return {
+        "black_frames": black,
+        "screenshot_tool": tool or "mss",
         "window": region,
         "frame": list(frame.shape),
         "screenshot": "screen.png",
@@ -339,6 +382,37 @@ def bridge() -> dict:
     }
 
 
+LIVE_CLASSES = ("Hero", "Game", "Level", "LevelMap", "Mob", "Boss", "Camera", "Entity")
+
+
+def live_classes(types_file: Path, wanted=LIVE_CLASSES) -> list[str]:
+    """Full class names from types.txt whose last component is one of `wanted`."""
+    names = re.findall(r"^class (\S+)", types_file.read_text(encoding="utf-8"), re.MULTILINE)
+    return [n for n in names if n.rsplit(".", 1)[-1] in wanted][:12]
+
+
+def hashlink_live(names: list[str], dumps: int = 2) -> dict:
+    from .hashlink import HashLink
+    from .memory import LinuxProcessMemory
+
+    hl = HashLink(LinuxProcessMemory())
+    result = {}
+    for name in names:
+        started = time.perf_counter()
+        try:
+            cls = hl.find_class(name)
+            found = hl.instances(cls, limit=200)
+            result[name] = {
+                **hl.describe_class(cls),
+                "instances": len(found),
+                "sample": [hl.dump(a) for a in found[:dumps]],
+            }
+        except Exception as exc:  # noqa: BLE001
+            result[name] = {"error": f"{type(exc).__name__}: {exc}"}
+        result[name]["seconds"] = round(time.perf_counter() - started, 2)
+    return result
+
+
 def system() -> dict:
     info = {
         "platform": platform.platform(),
@@ -370,7 +444,7 @@ def system() -> dict:
 def main(args) -> Path:
     folder = Path(args.out) / datetime.now().astimezone().strftime("%Y%m%d-%H%M%S")  # local time
     folder.mkdir(parents=True, exist_ok=False)
-    report: dict = {"probe_version": 2}
+    report: dict = {"probe_version": 3}
     step(report, "system")(system)
     if sys.platform.startswith("linux"):
         step(report, "linux")(linux)
@@ -378,8 +452,20 @@ def main(args) -> Path:
     step(report, "game")(
         lambda: game_files(game) if game else {"error": "Dead Cells not found; pass --game PATH"}
     )
-    if game and (game / "hlboot.dat").exists() and not args.skip_types:
-        step(report, "types")(lambda: dump_types(game / "hlboot.dat", folder / "types.txt"))
+    bytecode = game / "hlboot.dat" if game else None
+    if game and not bytecode.exists() and (game / "deadcells.exe").exists():
+        # Local cache, never committed: it is the game's code.
+        bytecode = Path(__file__).resolve().parents[1] / "cache" / "hlboot.dat"
+        if not args.skip_types:
+            step(report, "bytecode")(lambda: extract_bytecode(game / "deadcells.exe", bytecode))
+    if bytecode and bytecode.exists() and not args.skip_types:
+        step(report, "types")(lambda: dump_types(bytecode, folder / "types.txt"))
+    if (
+        (folder / "types.txt").exists()
+        and sys.platform.startswith("linux")
+        and not getattr(args, "skip_live", False)
+    ):
+        step(report, "hashlink_live")(lambda: hashlink_live(live_classes(folder / "types.txt")))
     if not args.skip_capture:
         step(report, "capture")(lambda: capture(folder))
     step(report, "bridge")(bridge)

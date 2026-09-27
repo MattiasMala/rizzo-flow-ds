@@ -233,3 +233,4 @@ deadcells/calibration/
 deadcells/dataset/
 deadcells/models/
 deadcells/.venv-dc/
+deadcells/cache/

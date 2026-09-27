@@ -6,7 +6,7 @@ cadute, piattaforme e scale evitando i nemici, e lo trasforma in un JSON compatt
 Flow. Più la tabella delle build migliori con le domande al modello per scegliere armi,
 pergamene, mutazioni e bioma.
 
-> **Stato al 25 settembre 2026.** Codice e test (58) verificati **solo su dati sintetici** in un
+> **Stato al 25 settembre 2026.** Codice e test (64) verificati **solo su dati sintetici** in un
 > container Linux senza gioco. **Mai provato sul gioco vero.** Manca il mod che scrive lo stato
 > nella memoria condivisa (sezione A): il protocollo è fissato e provato, il lato gioco no.
 > La fisica del personaggio (altezza dei salti, velocità) è **stimata**, da misurare. Per la via
@@ -74,6 +74,35 @@ Il gioco gira sul PC dell'utente con **Arch Linux** (non Windows). Conseguenze:
   cd deadcells && uv venv .venv-dc && uv pip install --python .venv-dc -r requirements.txt
   .venv-dc/bin/python -m deadcells probe        # con il gioco aperto
   ```
+
+## Primo probe sul PC dell'utente (27 settembre 2026)
+
+`deadcells/probes/20260927-234638/`: Arch Linux (kernel zen), **Hyprland (Wayland)**, RTX 3070;
+Dead Cells **versione Windows sotto Proton** (app 588650); `ptrace_scope` 0 e **lettura della
+memoria del gioco riuscita** (intestazione `MZ` di `deadcells.exe`). Lo screenshot via `mss`
+(XWayland) è **nero**: su Hyprland la cattura X11 non vede il gioco, quindi la via schermo è
+chiusa anche per questo e il probe ora ripiega su `grim` quando i frame sono neri. Nessun
+`hlboot.dat`: il bytecode è dentro `deadcells.exe`, ora estratto in `deadcells/cache/` (mai su
+git) come fa alivecells. Benchmark sul PC: grafo 215 ms, percorso 1.8 ms, campo di flusso 2.2
+ms, aggiornamento per frame 0.38 ms, lettura HUD+minimappa sintetiche 1.1 ms.
+
+## C. Lettura degli oggetti HashLink (`hashlink.py`)
+
+HashLink tiene in memoria i descrittori completi dei tipi, quindi niente catene di puntatori:
+dal nome di una classe (da `types.txt`) si trovano la stringa UTF-16 del nome, l'`hl_type_obj`
+che la punta (nome all'offset 16), l'`hl_type` (kind 11) che punta al descrittore, e dal
+`hl_runtime_obj` gli **offset esatti di ogni campo**, ereditati compresi. Le istanze sono le parole
+di memoria uguali all'indirizzo dell'`hl_type`, tenute solo se ogni campo puntatore punta a un
+oggetto del tipo dichiarato (le altre sono descrittori o memoria vecchia). Le variabili statiche
+(`Game.ME`) si leggono dal `global_value` del descrittore, senza scansione. Stringhe Haxe e
+`Array` di oggetti sono decodificati.
+
+Verificato su un **processo HashLink 1.14 vero** (VM compilata qui, programma Haxe in
+`deadcells/tests/data/hltest/`): layout dei campi (`cx` a 8, `xr` a 16, dimensione 72), valori di
+eroe e nemici, riferimenti, array, statici, un campo che cambia in diretta; trovare una classe
+~90 ms, lettura di un campo 1.6 µs. La versione di libhl del gioco può differire: i controlli
+del probe lo mostreranno. `python -m deadcells hl en.Hero` (nome da `types.txt`) stampa campi e
+istanze; `--watch x,y --hz 60` campiona campi nel tempo (per misurare la fisica).
 
 ## Sviluppo da remoto (sessione cloud + PC del gioco)
 
@@ -220,7 +249,7 @@ sotto usano i percorsi di Windows (`.venv-dc/Scripts/`).
 cd deadcells
 uv venv .venv-dc && uv pip install --python .venv-dc -r requirements.txt
 uv pip install --python .venv-dc onnxruntime-directml   # oppure onnxruntime-gpu (NVIDIA) / onnxruntime
-.venv-dc/Scripts/python -m pytest -q tests              # 58 test, dati sintetici
+.venv-dc/Scripts/python -m pytest -q tests              # 64 test, dati sintetici
 .venv-dc/Scripts/python -m deadcells bench-nav          # pathfinding e ponte su questa macchina
 .venv-dc/Scripts/python -m deadcells bench              # latenza su questa macchina
 ```

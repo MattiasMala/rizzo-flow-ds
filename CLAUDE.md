@@ -168,8 +168,8 @@ Richiesta dell'utente: albero/tabella delle build migliori e un programma che de
 di Dead Cells (nemici, oggetti, stanze, percorso) con la latenza minima. Pacchetto separato come
 `training/` (ambiente proprio, `deadcells/requirements.txt`: numpy, OpenCV, mss/dxcam,
 onnxruntime da scegliere), documentazione in `docs/deadcells.md`. Si lancia da `deadcells/`:
-`python -m deadcells builds|layout|describe|live|bench|calibrate|learn-digits|collect|nav|bridge|bench-nav|probe`; test con
-`python -m pytest -q deadcells/tests` (58, dati sintetici; `test_builds`/`decide` validano le
+`python -m deadcells builds|layout|describe|live|bench|calibrate|learn-digits|collect|nav|bridge|bench-nav|probe|hl`; test con
+`python -m pytest -q deadcells/tests` (64, dati sintetici; `test_builds`/`decide` validano le
 richieste contro `rizzo_flow.schema`). Il `pytest` del progetto non li raccoglie.
 Cattura → HUD (maschere `cv2.inRange`, cifre per template) → minimappa (celle, BFS per
 dilatazioni, cache se la griglia non cambia) → YOLO ONNX (non addestrato) → tracker → JSON con
@@ -203,6 +203,14 @@ commit e push, la sessione cloud fa pull. Ogni passo del probe registra il propr
 `/dev/shm/RizzoDeadCells`, `find_window` con `xdotool` (X11), niente dxcam, `mss` non va su
 Wayland nativo (probe: screenshot con grim/spectacle/gnome-screenshot). Il Core Modding API è
 solo Windows: con la build nativa la strada è la lettura esterna guidata da `types.txt`.
+Primo probe (27 settembre, `deadcells/probes/20260927-234638/`): Hyprland/Wayland, RTX 3070,
+**build Windows sotto Proton**, lettura memoria ok, screenshot mss **nero** (fallback grim),
+bytecode dentro `deadcells.exe` (estratto in `deadcells/cache/`, ignorato da git).
+`hashlink.py`: lettore di classi/istanze/statici HashLink dalla memoria (offset di `hl.h` x64,
+`fields_indexes` del runtime), provato su un processo HashLink 1.14 vero (VM compilata nella
+sessione, sorgenti del test in `deadcells/tests/data/hltest/`; test live solo con
+`HASHLINK_BIN` o `hl` nel PATH). CLI `hl CLASSE [--watch campi]`; il probe (v3) fa anche
+`hashlink_live` sulle classi Hero/Game/Level/Mob/... trovate in `types.txt`.
 
 ### Sito del progetto (GitHub Pages)
 
