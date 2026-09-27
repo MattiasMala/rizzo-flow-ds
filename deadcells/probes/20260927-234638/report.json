@@ -1,0 +1,317 @@
+{
+ "probe_version": 2,
+ "system": {
+  "platform": "Linux-7.2.3-zen1-2-zen-x86_64-with-glibc2.44",
+  "python": "3.12.13",
+  "machine": "x86_64",
+  "processor": "",
+  "nvidia": "NVIDIA GeForce RTX 3070, 610.57.04, 8192 MiB",
+  "gpus": [
+   "09:00.0 VGA compatible controller: NVIDIA Corporation GA104 [GeForce RTX 3070 Lite Hash Rate] (rev a1)"
+  ],
+  "numpy": "2.5.3",
+  "cv2": "5.0.0",
+  "scipy": "1.18.1",
+  "mss": "10.2.0",
+  "dxcam": null,
+  "onnxruntime": null,
+  "crashlink": "installed"
+ },
+ "_seconds": {
+  "system": 0.47,
+  "linux": 0.011,
+  "game": 0.024,
+  "capture": 0.095,
+  "bridge": 0.003,
+  "bench_screen": 0.594,
+  "bench_nav": 1.677
+ },
+ "linux": {
+  "session": "wayland",
+  "desktop": "Hyprland",
+  "wayland_display": "wayland-1",
+  "x_display": ":1",
+  "tools": {
+   "xdotool": true,
+   "grim": true,
+   "spectacle": false,
+   "gnome-screenshot": false,
+   "scanmem": false,
+   "gdb": true
+  },
+  "dev_shm_writable": true,
+  "uinput_writable": true,
+  "ptrace_scope": "0",
+  "game_process": {
+   "pid": 157562,
+   "mode": "proton",
+   "argv0": "S:\\common\\Dead Cells\\deadcells.exe"
+  },
+  "modules_of_interest": [
+   "deadcells.exe",
+   "fmt.hdll",
+   "iphlpapi.dll",
+   "libhl.dll",
+   "openal.hdll",
+   "openal32.dll",
+   "shlwapi.dll",
+   "ui.hdll"
+  ],
+  "modules_total": 198,
+  "memory_read": {
+   "ok": true,
+   "module": "deadcells.exe",
+   "magic": "4d5a9000"
+  }
+ },
+ "game": {
+  "root": "/home/arius/.local/share/Steam/steamapps/common/Dead Cells",
+  "build": "windows (Proton)",
+  "steam_appid": "588650",
+  "proton_prefix_exists": true,
+  "files": {
+   "deadcells.exe": {
+    "bytes": 18339336,
+    "format": "PE",
+    "sha256": "6778a6cf685a0f5962dd880af7e7ab6dbd848b5cd32daab6a8a8a6078534a7a1"
+   },
+   "deadcells_gl.exe": {
+    "bytes": 18333192,
+    "format": "PE",
+    "sha256": "d29f14e50d0e29217c11309674787411a25aca1696f329dfcb6bab64afb69e0b"
+   },
+   "libhl.dll": {
+    "bytes": 308736,
+    "format": "PE",
+    "sha256": "712bb75bb808a36523b20409d9fa5d457d113de8c051e3213fc863bc1cd9569a"
+   },
+   "res.pak": {
+    "bytes": 2071255850,
+    "format": null,
+    "sha256": null
+   }
+  },
+  "top_level": [
+   "ModTools",
+   "OpenAL32.dll",
+   "SDL2.dll",
+   "ThirdPartyLicenses.txt",
+   "api-ms-win-core-console-l1-1-0.dll",
+   "api-ms-win-core-datetime-l1-1-0.dll",
+   "api-ms-win-core-debug-l1-1-0.dll",
+   "api-ms-win-core-errorhandling-l1-1-0.dll",
+   "api-ms-win-core-file-l1-1-0.dll",
+   "api-ms-win-core-file-l1-2-0.dll",
+   "api-ms-win-core-file-l2-1-0.dll",
+   "api-ms-win-core-handle-l1-1-0.dll",
+   "api-ms-win-core-heap-l1-1-0.dll",
+   "api-ms-win-core-interlocked-l1-1-0.dll",
+   "api-ms-win-core-libraryloader-l1-1-0.dll",
+   "api-ms-win-core-localization-l1-2-0.dll",
+   "api-ms-win-core-memory-l1-1-0.dll",
+   "api-ms-win-core-namedpipe-l1-1-0.dll",
+   "api-ms-win-core-processenvironment-l1-1-0.dll",
+   "api-ms-win-core-processthreads-l1-1-0.dll",
+   "api-ms-win-core-processthreads-l1-1-1.dll",
+   "api-ms-win-core-profile-l1-1-0.dll",
+   "api-ms-win-core-rtlsupport-l1-1-0.dll",
+   "api-ms-win-core-string-l1-1-0.dll",
+   "api-ms-win-core-synch-l1-1-0.dll",
+   "api-ms-win-core-synch-l1-2-0.dll",
+   "api-ms-win-core-sysinfo-l1-1-0.dll",
+   "api-ms-win-core-timezone-l1-1-0.dll",
+   "api-ms-win-core-util-l1-1-0.dll",
+   "api-ms-win-crt-conio-l1-1-0.dll",
+   "api-ms-win-crt-convert-l1-1-0.dll",
+   "api-ms-win-crt-environment-l1-1-0.dll",
+   "api-ms-win-crt-filesystem-l1-1-0.dll",
+   "api-ms-win-crt-heap-l1-1-0.dll",
+   "api-ms-win-crt-locale-l1-1-0.dll",
+   "api-ms-win-crt-math-l1-1-0.dll",
+   "api-ms-win-crt-multibyte-l1-1-0.dll",
+   "api-ms-win-crt-private-l1-1-0.dll",
+   "api-ms-win-crt-process-l1-1-0.dll",
+   "api-ms-win-crt-runtime-l1-1-0.dll",
+   "api-ms-win-crt-stdio-l1-1-0.dll",
+   "api-ms-win-crt-string-l1-1-0.dll",
+   "api-ms-win-crt-time-l1-1-0.dll",
+   "api-ms-win-crt-utility-l1-1-0.dll",
+   "chroma.hdll",
+   "d3dcompiler_47.dll",
+   "deadcells.exe",
+   "deadcells_gl.exe",
+   "directx.hdll",
+   "discord.hdll",
+   "fmt.hdll",
+   "lang",
+   "libhl.dll",
+   "logs",
+   "msvcp140.dll",
+   "openal.hdll",
+   "res.pak",
+   "save",
+   "sdl.hdll",
+   "ssl.hdll",
+   "steam.hdll",
+   "steam_api.dll",
+   "ucrtbase.dll",
+   "ui.hdll",
+   "uv.hdll",
+   "vcruntime140.dll",
+   "your game content lives here.txt"
+  ],
+  "core_modding_installed": false
+ },
+ "capture": {
+  "window": [
+   0,
+   0,
+   1920,
+   1080
+  ],
+  "frame": [
+   1080,
+   1920,
+   3
+  ],
+  "screenshot": "screen.png",
+  "grab_ms_p50": 0.4,
+  "grab_ms_p95": 1.48
+ },
+ "bridge": {
+  "error": "FileNotFoundError: [Errno 2] No such file or directory: '/dev/shm/RizzoDeadCells'",
+  "trace": "Traceback (most recent call last):\n  File \"/home/arius/rizzo-flow-ds/deadcells/deadcells/probe.py\", line 57, in run\n    report[name] = fn()\n                   ^^^^\n  File \"/home/arius/rizzo-flow-ds/deadcells/deadcells/probe.py\", line 327, in bridge\n    snap = reader.read()\n           ^^^^^^^^^^^^^\n  File \"/home/arius/rizzo-flow-ds/deadcells/deadcells/bridge.py\", line 226, in read\n    buf = self._map()\n          ^^^^^^^^^^^\nFileNotFoundError: [Errno 2] No such file or directory: '/dev/shm/RizzoDeadCells'\n"
+ },
+ "bench_screen": {
+  "frame": "1920x1080",
+  "map_grid": [
+   98,
+   73
+  ],
+  "timings_ms": {
+   "no detector": {
+    "hud": {
+     "p50": 0.121,
+     "p95": 0.161,
+     "max": 4.989,
+     "n": 100
+    },
+    "map": {
+     "p50": 0.986,
+     "p95": 1.086,
+     "max": 7.98,
+     "n": 100
+    },
+    "detect": {
+     "p50": 0.0,
+     "p95": 0.0,
+     "max": 0.001,
+     "n": 100
+    },
+    "track": {
+     "p50": 0.002,
+     "p95": 0.002,
+     "max": 0.005,
+     "n": 100
+    },
+    "describe": {
+     "p50": 0.007,
+     "p95": 0.011,
+     "max": 0.025,
+     "n": 100
+    },
+    "processing": {
+     "p50": 1.114,
+     "p95": 1.237,
+     "max": 12.995,
+     "n": 100
+    },
+    "latency": {
+     "p50": 1.114,
+     "p95": 1.237,
+     "max": 12.995,
+     "n": 100
+    }
+   },
+   "colour detector": {
+    "hud": {
+     "p50": 0.153,
+     "p95": 0.162,
+     "max": 0.212,
+     "n": 100
+    },
+    "map": {
+     "p50": 1.071,
+     "p95": 1.12,
+     "max": 3.474,
+     "n": 100
+    },
+    "detect": {
+     "p50": 1.353,
+     "p95": 1.486,
+     "max": 2.005,
+     "n": 100
+    },
+    "track": {
+     "p50": 0.012,
+     "p95": 0.013,
+     "max": 0.018,
+     "n": 100
+    },
+    "describe": {
+     "p50": 0.02,
+     "p95": 0.022,
+     "max": 0.028,
+     "n": 100
+    },
+    "processing": {
+     "p50": 2.616,
+     "p95": 2.764,
+     "max": 5.669,
+     "n": 100
+    },
+    "latency": {
+     "p50": 2.616,
+     "p95": 2.764,
+     "max": 5.669,
+     "n": 100
+    }
+   }
+  }
+ },
+ "bench_nav": {
+  "level": [
+   200,
+   500
+  ],
+  "nodes": 11161,
+  "edges": 112175,
+  "graph_build_ms": 214.7,
+  "entities": 40,
+  "astar_python_ms": {
+   "p50": 24.734,
+   "p95": 43.921,
+   "max": 49.518
+  },
+  "path_scipy_ms": {
+   "p50": 1.755,
+   "p95": 1.929,
+   "max": 2.231
+  },
+  "flow_field_ms": {
+   "p50": 2.211,
+   "p95": 2.477,
+   "max": 2.968
+  },
+  "bridge_read_ms": {
+   "p50": 0.007,
+   "p95": 0.01,
+   "max": 0.015
+  },
+  "navigator_update_ms": {
+   "p50": 0.378,
+   "p95": 3.71,
+   "max": 4.404
+  }
+ }
+}
