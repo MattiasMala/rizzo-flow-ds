@@ -1,0 +1,396 @@
+{
+ "probe_version": 3,
+ "system": {
+  "platform": "Linux-7.2.3-zen1-2-zen-x86_64-with-glibc2.44",
+  "python": "3.12.13",
+  "machine": "x86_64",
+  "processor": "",
+  "nvidia": "NVIDIA GeForce RTX 3070, 610.57.04, 8192 MiB",
+  "gpus": [
+   "09:00.0 VGA compatible controller: NVIDIA Corporation GA104 [GeForce RTX 3070 Lite Hash Rate] (rev a1)"
+  ],
+  "numpy": "2.5.3",
+  "cv2": "5.0.0",
+  "scipy": "1.18.1",
+  "mss": "10.2.0",
+  "dxcam": null,
+  "onnxruntime": null,
+  "crashlink": "installed"
+ },
+ "_seconds": {
+  "system": 0.141,
+  "linux": 0.016,
+  "game": 0.022,
+  "bytecode": 7.266,
+  "types": 7.122,
+  "hashlink_live": 6.981,
+  "capture": 0.226,
+  "bridge": 0.023,
+  "bench_screen": 0.56,
+  "bench_nav": 1.451
+ },
+ "linux": {
+  "session": "wayland",
+  "desktop": "Hyprland",
+  "wayland_display": "wayland-1",
+  "x_display": ":1",
+  "tools": {
+   "xdotool": true,
+   "grim": true,
+   "spectacle": false,
+   "gnome-screenshot": false,
+   "scanmem": false,
+   "gdb": true
+  },
+  "dev_shm_writable": true,
+  "uinput_writable": true,
+  "ptrace_scope": "0",
+  "game_process": {
+   "pid": 157562,
+   "mode": "proton",
+   "argv0": "S:\\common\\Dead Cells\\deadcells.exe"
+  },
+  "modules_of_interest": [
+   "deadcells.exe",
+   "fmt.hdll",
+   "iphlpapi.dll",
+   "libhl.dll",
+   "openal.hdll",
+   "openal32.dll",
+   "shlwapi.dll",
+   "ui.hdll"
+  ],
+  "modules_total": 198,
+  "memory_read": {
+   "ok": true,
+   "module": "deadcells.exe",
+   "magic": "4d5a9000"
+  }
+ },
+ "game": {
+  "root": "/home/arius/.local/share/Steam/steamapps/common/Dead Cells",
+  "build": "windows (Proton)",
+  "steam_appid": "588650",
+  "proton_prefix_exists": true,
+  "files": {
+   "deadcells.exe": {
+    "bytes": 18339336,
+    "format": "PE",
+    "sha256": "6778a6cf685a0f5962dd880af7e7ab6dbd848b5cd32daab6a8a8a6078534a7a1"
+   },
+   "deadcells_gl.exe": {
+    "bytes": 18333192,
+    "format": "PE",
+    "sha256": "d29f14e50d0e29217c11309674787411a25aca1696f329dfcb6bab64afb69e0b"
+   },
+   "libhl.dll": {
+    "bytes": 308736,
+    "format": "PE",
+    "sha256": "712bb75bb808a36523b20409d9fa5d457d113de8c051e3213fc863bc1cd9569a"
+   },
+   "res.pak": {
+    "bytes": 2071255850,
+    "format": null,
+    "sha256": null
+   }
+  },
+  "top_level": [
+   "ModTools",
+   "OpenAL32.dll",
+   "SDL2.dll",
+   "ThirdPartyLicenses.txt",
+   "api-ms-win-core-console-l1-1-0.dll",
+   "api-ms-win-core-datetime-l1-1-0.dll",
+   "api-ms-win-core-debug-l1-1-0.dll",
+   "api-ms-win-core-errorhandling-l1-1-0.dll",
+   "api-ms-win-core-file-l1-1-0.dll",
+   "api-ms-win-core-file-l1-2-0.dll",
+   "api-ms-win-core-file-l2-1-0.dll",
+   "api-ms-win-core-handle-l1-1-0.dll",
+   "api-ms-win-core-heap-l1-1-0.dll",
+   "api-ms-win-core-interlocked-l1-1-0.dll",
+   "api-ms-win-core-libraryloader-l1-1-0.dll",
+   "api-ms-win-core-localization-l1-2-0.dll",
+   "api-ms-win-core-memory-l1-1-0.dll",
+   "api-ms-win-core-namedpipe-l1-1-0.dll",
+   "api-ms-win-core-processenvironment-l1-1-0.dll",
+   "api-ms-win-core-processthreads-l1-1-0.dll",
+   "api-ms-win-core-processthreads-l1-1-1.dll",
+   "api-ms-win-core-profile-l1-1-0.dll",
+   "api-ms-win-core-rtlsupport-l1-1-0.dll",
+   "api-ms-win-core-string-l1-1-0.dll",
+   "api-ms-win-core-synch-l1-1-0.dll",
+   "api-ms-win-core-synch-l1-2-0.dll",
+   "api-ms-win-core-sysinfo-l1-1-0.dll",
+   "api-ms-win-core-timezone-l1-1-0.dll",
+   "api-ms-win-core-util-l1-1-0.dll",
+   "api-ms-win-crt-conio-l1-1-0.dll",
+   "api-ms-win-crt-convert-l1-1-0.dll",
+   "api-ms-win-crt-environment-l1-1-0.dll",
+   "api-ms-win-crt-filesystem-l1-1-0.dll",
+   "api-ms-win-crt-heap-l1-1-0.dll",
+   "api-ms-win-crt-locale-l1-1-0.dll",
+   "api-ms-win-crt-math-l1-1-0.dll",
+   "api-ms-win-crt-multibyte-l1-1-0.dll",
+   "api-ms-win-crt-private-l1-1-0.dll",
+   "api-ms-win-crt-process-l1-1-0.dll",
+   "api-ms-win-crt-runtime-l1-1-0.dll",
+   "api-ms-win-crt-stdio-l1-1-0.dll",
+   "api-ms-win-crt-string-l1-1-0.dll",
+   "api-ms-win-crt-time-l1-1-0.dll",
+   "api-ms-win-crt-utility-l1-1-0.dll",
+   "chroma.hdll",
+   "d3dcompiler_47.dll",
+   "deadcells.exe",
+   "deadcells_gl.exe",
+   "directx.hdll",
+   "discord.hdll",
+   "fmt.hdll",
+   "lang",
+   "libhl.dll",
+   "logs",
+   "msvcp140.dll",
+   "openal.hdll",
+   "res.pak",
+   "save",
+   "sdl.hdll",
+   "ssl.hdll",
+   "steam.hdll",
+   "steam_api.dll",
+   "ucrtbase.dll",
+   "ui.hdll",
+   "uv.hdll",
+   "vcruntime140.dll",
+   "your game content lives here.txt"
+  ],
+  "core_modding_installed": false
+ },
+ "bytecode": {
+  "offset": 398096,
+  "bytes": 17746412,
+  "version": 4,
+  "sha256": "b863532776efbc215e8dd0c9ccfcddc257d6091d7396a3272084e974571ae28c"
+ },
+ "types": {
+  "file": "types.txt",
+  "classes_total": 4918,
+  "classes_kept": 1678,
+  "keywords": [
+   "hero",
+   "level",
+   "entity",
+   "mob",
+   "game",
+   "collision",
+   "camera",
+   "player",
+   "boss",
+   "lifebar",
+   "inventory",
+   "item",
+   "room",
+   "door",
+   "teleport",
+   "loot",
+   "bullet",
+   "hud",
+   "physics",
+   "map",
+   "cell",
+   "flask",
+   "scroll"
+  ]
+ },
+ "hashlink_live": {
+  "pr.Level": {
+   "error": "LookupError: No class descriptor points to 'pr.Level'",
+   "seconds": 0.67
+  },
+  "level.LevelMap": {
+   "error": "LookupError: No hl_type of kind HOBJ for 'level.LevelMap'",
+   "seconds": 0.83
+  },
+  "pr.Game": {
+   "error": "LookupError: No class descriptor points to 'pr.Game'",
+   "seconds": 0.72
+  },
+  "Entity": {
+   "error": "LookupError: No class descriptor points to 'Entity'",
+   "seconds": 0.9
+  },
+  "en.Hero": {
+   "error": "LookupError: No class descriptor points to 'en.Hero'",
+   "seconds": 0.72
+  },
+  "en.Mob": {
+   "error": "LookupError: No class descriptor points to 'en.Mob'",
+   "seconds": 0.72
+  },
+  "en.mob.Boss": {
+   "error": "LookupError: No class descriptor points to 'en.mob.Boss'",
+   "seconds": 0.61
+  },
+  "h3d.Camera": {
+   "error": "LookupError: No hl_type of kind HOBJ for 'h3d.Camera'",
+   "seconds": 0.88
+  },
+  "level.Mob": {
+   "error": "LookupError: No hl_type of kind HOBJ for 'level.Mob'",
+   "seconds": 0.92
+  }
+ },
+ "capture": {
+  "black_frames": true,
+  "screenshot_tool": "grim",
+  "window": [
+   0,
+   0,
+   1920,
+   1080
+  ],
+  "frame": [
+   1080,
+   1920,
+   3
+  ],
+  "screenshot": "screen.png",
+  "grab_ms_p50": 0.49,
+  "grab_ms_p95": 0.75
+ },
+ "bridge": {
+  "error": "FileNotFoundError: [Errno 2] No such file or directory: '/dev/shm/RizzoDeadCells'",
+  "trace": "Traceback (most recent call last):\n  File \"/home/arius/rizzo-flow-ds/deadcells/deadcells/probe.py\", line 57, in run\n    report[name] = fn()\n                   ^^^^\n  File \"/home/arius/rizzo-flow-ds/deadcells/deadcells/probe.py\", line 370, in bridge\n    snap = reader.read()\n           ^^^^^^^^^^^^^\n  File \"/home/arius/rizzo-flow-ds/deadcells/deadcells/bridge.py\", line 226, in read\n    buf = self._map()\n          ^^^^^^^^^^^\nFileNotFoundError: [Errno 2] No such file or directory: '/dev/shm/RizzoDeadCells'\n"
+ },
+ "bench_screen": {
+  "frame": "1920x1080",
+  "map_grid": [
+   98,
+   73
+  ],
+  "timings_ms": {
+   "no detector": {
+    "hud": {
+     "p50": 0.139,
+     "p95": 0.174,
+     "max": 1.277,
+     "n": 100
+    },
+    "map": {
+     "p50": 1.043,
+     "p95": 1.157,
+     "max": 4.71,
+     "n": 100
+    },
+    "detect": {
+     "p50": 0.0,
+     "p95": 0.0,
+     "max": 0.001,
+     "n": 100
+    },
+    "track": {
+     "p50": 0.002,
+     "p95": 0.003,
+     "max": 0.005,
+     "n": 100
+    },
+    "describe": {
+     "p50": 0.009,
+     "p95": 0.012,
+     "max": 0.022,
+     "n": 100
+    },
+    "processing": {
+     "p50": 1.197,
+     "p95": 1.338,
+     "max": 6.015,
+     "n": 100
+    },
+    "latency": {
+     "p50": 1.197,
+     "p95": 1.338,
+     "max": 6.016,
+     "n": 100
+    }
+   },
+   "colour detector": {
+    "hud": {
+     "p50": 0.158,
+     "p95": 0.196,
+     "max": 0.272,
+     "n": 100
+    },
+    "map": {
+     "p50": 1.087,
+     "p95": 1.324,
+     "max": 4.723,
+     "n": 100
+    },
+    "detect": {
+     "p50": 1.37,
+     "p95": 2.127,
+     "max": 2.302,
+     "n": 100
+    },
+    "track": {
+     "p50": 0.011,
+     "p95": 0.016,
+     "max": 0.023,
+     "n": 100
+    },
+    "describe": {
+     "p50": 0.02,
+     "p95": 0.03,
+     "max": 0.04,
+     "n": 100
+    },
+    "processing": {
+     "p50": 2.652,
+     "p95": 3.674,
+     "max": 7.245,
+     "n": 100
+    },
+    "latency": {
+     "p50": 2.652,
+     "p95": 3.674,
+     "max": 7.246,
+     "n": 100
+    }
+   }
+  }
+ },
+ "bench_nav": {
+  "level": [
+   200,
+   500
+  ],
+  "nodes": 11161,
+  "edges": 112175,
+  "graph_build_ms": 233.2,
+  "entities": 40,
+  "astar_python_ms": {
+   "p50": 25.162,
+   "p95": 44.792,
+   "max": 50.635
+  },
+  "path_scipy_ms": {
+   "p50": 1.783,
+   "p95": 1.958,
+   "max": 2.234
+  },
+  "flow_field_ms": {
+   "p50": 2.216,
+   "p95": 2.477,
+   "max": 2.98
+  },
+  "bridge_read_ms": {
+   "p50": 0.007,
+   "p95": 0.01,
+   "max": 0.016
+  },
+  "navigator_update_ms": {
+   "p50": 0.382,
+   "p95": 3.91,
+   "max": 3.974
+  }
+ }
+}
