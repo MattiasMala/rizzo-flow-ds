@@ -20,6 +20,8 @@ import traceback
 from datetime import datetime
 from pathlib import Path
 
+import numpy as np
+
 GAME_DIR = "Dead Cells"
 KEYWORDS = (
     "hero",
@@ -382,7 +384,7 @@ def bridge() -> dict:
     }
 
 
-LIVE_CLASSES = ("Hero", "Game", "Level", "LevelMap", "Mob", "Boss", "Camera", "Entity")
+LIVE_CLASSES = ("Hero", "Game", "Level", "LevelMap", "Mob", "Entity")
 
 
 def live_classes(types_file: Path, wanted=LIVE_CLASSES) -> list[str]:
@@ -409,8 +411,25 @@ def hashlink_live(names: list[str], dumps: int = 2) -> dict:
             }
         except Exception as exc:  # noqa: BLE001
             result[name] = {"error": f"{type(exc).__name__}: {exc}"}
+            if not any("diagnosis" in v for v in result.values() if isinstance(v, dict)):
+                try:  # once per probe: where the name is and what points to it
+                    result[name]["diagnosis"] = hl.diagnose(name)
+                except Exception as diag:  # noqa: BLE001
+                    result[name]["diagnosis"] = f"{type(diag).__name__}: {diag}"
         result[name]["seconds"] = round(time.perf_counter() - started, 2)
     return result
+
+
+def game_state(folder: Path) -> dict:
+    from .game_state import probe_report
+    from .hashlink import HashLink
+    from .memory import LinuxProcessMemory
+
+    report, grid = probe_report(HashLink(LinuxProcessMemory()), wait=6.0)
+    if grid is not None:
+        np.savez_compressed(folder / "level.npz", collisions=grid)
+        report["collisions"]["file"] = "level.npz"
+    return report
 
 
 def system() -> dict:
@@ -444,7 +463,7 @@ def system() -> dict:
 def main(args) -> Path:
     folder = Path(args.out) / datetime.now().astimezone().strftime("%Y%m%d-%H%M%S")  # local time
     folder.mkdir(parents=True, exist_ok=False)
-    report: dict = {"probe_version": 3}
+    report: dict = {"probe_version": 4}
     step(report, "system")(system)
     if sys.platform.startswith("linux"):
         step(report, "linux")(linux)
@@ -465,6 +484,7 @@ def main(args) -> Path:
         and sys.platform.startswith("linux")
         and not getattr(args, "skip_live", False)
     ):
+        step(report, "game_state")(lambda: game_state(folder))
         step(report, "hashlink_live")(lambda: hashlink_live(live_classes(folder / "types.txt")))
     if not args.skip_capture:
         step(report, "capture")(lambda: capture(folder))

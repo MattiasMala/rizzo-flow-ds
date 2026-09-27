@@ -104,13 +104,19 @@ class HashLink:
         return text if text.isprintable() else None
 
     # -- scanning --------------------------------------------------------------------------
-    def _regions(self):
-        regions = self.mem.regions(writable=True if self.writable_only else None)
+    SCOPES = ("anon", "rw", "all")  # widening search: anonymous rw, every rw, every readable
+
+    def _regions(self, scope: str = "anon"):
+        if scope == "all":
+            return self.mem.regions()
+        regions = self.mem.regions(writable=True)
+        if scope == "rw":
+            return regions
         anon = [r for r in regions if r[3] in ("", "[heap]") or r[3].startswith("[anon")]
         return anon or regions
 
-    def _chunks(self, overlap: int = 0):
-        for start, end, _, _ in self._regions():
+    def _chunks(self, overlap: int = 0, scope: str = "anon"):
+        for start, end, _, _ in self._regions(scope):
             at = start
             while at < end:
                 size = min(CHUNK, end - at)
@@ -121,9 +127,11 @@ class HashLink:
                 yield at, data
                 at += size
 
-    def find_bytes(self, needle: bytes, limit: int = 64, align: int = 1) -> list[int]:
+    def find_bytes(
+        self, needle: bytes, limit: int = 1024, align: int = 1, scope: str = "anon"
+    ) -> list[int]:
         found = []
-        for base, data in self._chunks(overlap=len(needle)):
+        for base, data in self._chunks(overlap=len(needle), scope=scope):
             i = data.find(needle)
             while i != -1 and len(found) < limit:
                 if (base + i) % align == 0:
@@ -133,12 +141,14 @@ class HashLink:
                 break
         return sorted(set(found))
 
-    def find_pointers(self, values: list[int], limit: int = 100_000) -> dict[int, list[int]]:
+    def find_pointers(
+        self, values: list[int], limit: int = 100_000, scope: str = "anon"
+    ) -> dict[int, list[int]]:
         """Addresses (8-byte aligned) holding any of `values`."""
         wanted = np.array(sorted(set(values)), dtype=np.uint64)
         found: dict[int, list[int]] = {int(v): [] for v in wanted}
         total = 0
-        for base, data in self._chunks():
+        for base, data in self._chunks(scope=scope):
             words = np.frombuffer(data[: len(data) // 8 * 8], dtype=np.uint64)
             hits = np.flatnonzero(np.isin(words, wanted))
             for h in hits:
@@ -148,29 +158,88 @@ class HashLink:
                 break
         return found
 
+    def region_summary(self) -> list[dict]:
+        """Readable memory grouped by mapping name: where to look when a search fails."""
+        groups: dict[tuple[str, str], list[int]] = {}
+        for start, end, perms, path in self.mem.regions():
+            key = (path.rsplit("/", 1)[-1] or "<anonymous>", perms)
+            groups.setdefault(key, [0, 0])
+            groups[key][0] += 1
+            groups[key][1] += end - start
+        rows = [
+            {"mapping": k[0], "perms": k[1], "regions": v[0], "mib": round(v[1] / 2**20, 1)}
+            for k, v in groups.items()
+        ]
+        return sorted(rows, key=lambda r: -r["mib"])[:25]
+
     # -- classes ---------------------------------------------------------------------------
     def find_class(self, name: str) -> ClassInfo:
-        """Locate a class by its full name (e.g. "en.Hero") in the running VM."""
-        strings = self.find_bytes(name.encode("utf-16-le") + b"\0\0", align=2)
-        if not strings:
-            raise LookupError(f"Class name {name!r} not found in memory")
-        refs = self.find_pointers(strings)
-        candidates = []
-        for places in refs.values():
-            for p in places:
-                obj = p - 16  # hl_type_obj.name
-                nfields, nproto = self.i32(obj), self.i32(obj + 4)
-                if 0 <= nfields < 4096 and 0 <= nproto < 4096:
-                    candidates.append(obj)
-        if not candidates:
-            raise LookupError(f"No class descriptor points to {name!r}")
-        types = self.find_pointers(candidates)
-        for obj, places in types.items():
-            for p in places:
-                t = p - 8  # hl_type.obj
-                if self.u32(t) == HOBJ:
-                    return self.class_at(t)
-        raise LookupError(f"No hl_type of kind HOBJ for {name!r}")
+        """Locate a class by its full name (e.g. "en.Hero") in the running VM, widening the
+        memory searched until the descriptors are found."""
+        needle = name.encode("utf-16-le") + b"\0\0"
+        problems = []
+        for scope in self.SCOPES:
+            strings = self.find_bytes(needle, align=2, scope=scope)
+            if not strings:
+                problems.append(f"{scope}: name not found")
+                continue
+            refs = self.find_pointers(strings, scope=scope)
+            candidates = []
+            for places in refs.values():
+                for p in places:
+                    obj = p - 16  # hl_type_obj.name
+                    try:
+                        nfields, nproto = self.i32(obj), self.i32(obj + 4)
+                    except OSError:
+                        continue
+                    if 0 <= nfields < 4096 and 0 <= nproto < 4096:
+                        candidates.append(obj)
+            if not candidates:
+                problems.append(f"{scope}: {len(strings)} names, no descriptor")
+                continue
+            types = self.find_pointers(candidates, scope=scope)
+            for places in types.values():
+                for p in places:
+                    t = p - 8  # hl_type.obj
+                    if self.u32(t) == HOBJ:
+                        info = self.class_at(t)
+                        if info.name == name:
+                            return info
+            problems.append(f"{scope}: {len(candidates)} descriptors, no hl_type")
+        raise LookupError(f"Class {name!r} not found ({'; '.join(problems)})")
+
+    def diagnose(self, name: str, show: int = 4) -> dict:
+        """Where a class name sits in memory and what points to it (to fix a failed search)."""
+        needle = name.encode("utf-16-le") + b"\0\0"
+        strings = self.find_bytes(needle, align=2, scope="all", limit=64)
+        regions = self.mem.regions()
+
+        def where(a):
+            return next(
+                (f"{r[2]} {r[3] or '<anonymous>'}" for r in regions if r[0] <= a < r[1]), "?"
+            )
+
+        out = {
+            "utf16_hits": len(strings),
+            "utf8_hits": len(self.find_bytes(name.encode() + b"\0", scope="all", limit=64)),
+            "strings": [],
+        }
+        refs = self.find_pointers(strings, scope="all") if strings else {}
+        for a in strings[:show]:
+            entry = {"address": f"{a:#x}", "region": where(a), "pointers": []}
+            for p in refs.get(a, [])[:show]:
+                around = self.mem.read(p - 32, 64)
+                entry["pointers"].append(
+                    {
+                        "at": f"{p:#x}",
+                        "region": where(p),
+                        "words_before_after": [f"{w:#x}" for w in struct.unpack("<8Q", around)],
+                    }
+                )
+            entry["pointer_count"] = len(refs.get(a, []))
+            out["strings"].append(entry)
+        out["regions"] = self.region_summary()
+        return out
 
     def class_at(self, t: int) -> ClassInfo:
         if t in self._classes:
@@ -276,6 +345,44 @@ class HashLink:
         slot = self.ptr(cls.obj_addr + 56)
         value = self.ptr(slot) if slot else 0
         return value or None
+
+    def values(self, obj: int, names: tuple[str, ...]) -> dict:
+        """Several scalar fields of one object with a single read of its whole block."""
+        cls = self.class_at(self.ptr(obj))
+        fields = {f.name: f for f in cls.fields}
+        size = cls.size or max(fields[n].offset for n in names) + 8
+        block = self.mem.read(obj, size)
+        out = {}
+        for name in names:
+            f = fields.get(name)
+            if f is None:
+                out[name] = None
+                continue
+            code = KINDS.index(f.kind) if f.kind in KINDS else -1
+            fmt = SCALARS.get(code, "<Q")
+            out[name] = struct.unpack_from(fmt, block, f.offset)[0]
+        return out
+
+    def fields_of(self, obj: int) -> dict[str, Field]:
+        return {f.name: f for f in self.class_at(self.ptr(obj)).fields}
+
+    def get(self, obj: int, *path: str):
+        """Follow field names: get(game, "curLevel", "map", "wid")."""
+        for name in path:
+            if not obj:
+                return None
+            obj = self.read_field(obj, self.fields_of(obj)[name])
+        return obj
+
+    def array_bytes(self, array: int, dtype: str = "<i4") -> np.ndarray:
+        """Contents of an `hl.types.ArrayBytes_*` (Int, Float...): {bytes, size, length}."""
+        fields = self.fields_of(array)
+        length = self.read_field(array, fields["length"])
+        data = self.ptr(array + fields["bytes"].offset)
+        item = np.dtype(dtype).itemsize
+        if length <= 0 or not data:
+            return np.zeros(0, dtype)
+        return np.frombuffer(self.mem.read(data, length * item), dtype=dtype).copy()
 
     def array_items(self, array_obj: int, limit: int = 4096) -> list[int]:
         """Elements (pointers) of an `hl.types.ArrayObj`: {type, length, array: varray*};

@@ -169,7 +169,7 @@ di Dead Cells (nemici, oggetti, stanze, percorso) con la latenza minima. Pacchet
 `training/` (ambiente proprio, `deadcells/requirements.txt`: numpy, OpenCV, mss/dxcam,
 onnxruntime da scegliere), documentazione in `docs/deadcells.md`. Si lancia da `deadcells/`:
 `python -m deadcells builds|layout|describe|live|bench|calibrate|learn-digits|collect|nav|bridge|bench-nav|probe|hl`; test con
-`python -m pytest -q deadcells/tests` (64, dati sintetici; `test_builds`/`decide` validano le
+`python -m pytest -q deadcells/tests` (67, dati sintetici; `test_builds`/`decide` validano le
 richieste contro `rizzo_flow.schema`). Il `pytest` del progetto non li raccoglie.
 Cattura → HUD (maschere `cv2.inRange`, cifre per template) → minimappa (celle, BFS per
 dilatazioni, cache se la griglia non cambia) → YOLO ONNX (non addestrato) → tracker → JSON con
@@ -211,6 +211,12 @@ bytecode dentro `deadcells.exe` (estratto in `deadcells/cache/`, ignorato da git
 sessione, sorgenti del test in `deadcells/tests/data/hltest/`; test live solo con
 `HASHLINK_BIN` o `hl` nel PATH). CLI `hl CLASSE [--watch campi]`; il probe (v3) fa anche
 `hashlink_live` sulle classi Hero/Game/Level/Mob/... trovate in `types.txt`.
+Probe 2 (`20260927-235710`): 4918 classi; catena utile `pr.Game.ME` → `hero: en.Hero`,
+`curLevel: pr.Level` → `map: level.LevelMap` (`collisions` ArrayBytes_Int, `wid`, `hei`) ed
+`entities`; `Entity` ha `cx, cy, xr, yr, dx, dy, life, maxLife, destroyed`. La ricerca classi
+falliva (solo memoria anonima, 64 nomi): ora scope anon→rw→all + `diagnose`.
+`game_state.DeadCellsReader` + probe v4 (`level.npz`, entità, 8 s di campioni dell'eroe con
+6 s di attesa). Mock HashLink con gli stessi nomi in `deadcells/tests/data/dcmock/`.
 
 ### Sito del progetto (GitHub Pages)
 

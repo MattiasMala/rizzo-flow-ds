@@ -6,7 +6,7 @@ cadute, piattaforme e scale evitando i nemici, e lo trasforma in un JSON compatt
 Flow. Più la tabella delle build migliori con le domande al modello per scegliere armi,
 pergamene, mutazioni e bioma.
 
-> **Stato al 25 settembre 2026.** Codice e test (64) verificati **solo su dati sintetici** in un
+> **Stato al 25 settembre 2026.** Codice e test (67) verificati **solo su dati sintetici** in un
 > container Linux senza gioco. **Mai provato sul gioco vero.** Manca il mod che scrive lo stato
 > nella memoria condivisa (sezione A): il protocollo è fissato e provato, il lato gioco no.
 > La fisica del personaggio (altezza dei salti, velocità) è **stimata**, da misurare. Per la via
@@ -103,6 +103,26 @@ eroe e nemici, riferimenti, array, statici, un campo che cambia in diretta; trov
 ~90 ms, lettura di un campo 1.6 µs. La versione di libhl del gioco può differire: i controlli
 del probe lo mostreranno. `python -m deadcells hl en.Hero` (nome da `types.txt`) stampa campi e
 istanze; `--watch x,y --hz 60` campiona campi nel tempo (per misurare la fisica).
+
+## Secondo probe e stato del gioco (`game_state.py`)
+
+Probe `20260927-235710`: bytecode estratto (17.7 MB, versione 4, 4918 classi). `types.txt`
+mostra un motore in stile Deepnight: `Entity` con posizione a celle `cx, cy` più frazione
+`xr, yr`, velocità `dx, dy`, `life`, `maxLife`, `destroyed`; `pr.Game.ME` (statico) con `hero`
+e `curLevel`; `pr.Level` con `map`, `entities`, `boss`, `nbMobsLeft`; `level.LevelMap` con
+`collisions` (`ArrayBytes_Int`), `wid`, `hei`, `platforms`, `rooms`, `cellToRoom`. La ricerca
+delle classi era fallita ("nessun descrittore punta al nome"): cercava solo nella memoria
+anonima e al massimo 64 copie del nome. Ora allarga la ricerca (anonima, poi tutta la scrivibile,
+poi tutta la leggibile) e, se fallisce ancora, il probe allega una diagnosi (dove sta il nome,
+chi lo punta, parole attorno, mappa delle regioni di memoria).
+
+`game_state.DeadCellsReader` segue `pr.Game.ME` → eroe, livello, griglia delle collisioni
+(riletta solo quando cambia la mappa) ed entità vive, leggendo ogni oggetto con una sola
+lettura del suo blocco. Provato su un finto Dead Cells in HashLink con gli stessi nomi di
+classi e campi (`deadcells/tests/data/dcmock/`, non è codice del gioco): istantanea completa
+0.07 ms. Il probe (v4) registra griglia (`level.npz`), valori delle collisioni, entità per
+classe e le più vicine, e 8 s di posizioni dell'eroe a 60 Hz (per misurare salti e velocità).
+Da verificare sul gioco: significato dei valori di `collisions` e verso degli assi.
 
 ## Sviluppo da remoto (sessione cloud + PC del gioco)
 
@@ -249,7 +269,7 @@ sotto usano i percorsi di Windows (`.venv-dc/Scripts/`).
 cd deadcells
 uv venv .venv-dc && uv pip install --python .venv-dc -r requirements.txt
 uv pip install --python .venv-dc onnxruntime-directml   # oppure onnxruntime-gpu (NVIDIA) / onnxruntime
-.venv-dc/Scripts/python -m pytest -q tests              # 64 test, dati sintetici
+.venv-dc/Scripts/python -m pytest -q tests              # 67 test, dati sintetici
 .venv-dc/Scripts/python -m deadcells bench-nav          # pathfinding e ponte su questa macchina
 .venv-dc/Scripts/python -m deadcells bench              # latenza su questa macchina
 ```

@@ -72,3 +72,12 @@ def test_static_singleton_without_scanning(game):
     me = game.dump(statics)["ME"]
     world = game.instances(game.find_class("Game"))[0]
     assert me == f"Game@{world:#x}"
+
+
+def test_field_paths_and_int_arrays(game):
+    statics = game.statics(game.find_class("Game"))
+    world = game.get(statics, "ME")
+    assert game.get(world, "hero", "name") == "hero"
+    assert (game.get(world, "wid"), game.get(world, "hei")) == (6, 4)
+    cells = game.array_bytes(game.get(world, "collisions"))
+    assert cells.tolist() == [1 if i % 3 == 0 else 0 for i in range(24)]
